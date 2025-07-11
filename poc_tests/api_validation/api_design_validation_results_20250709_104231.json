@@ -1,0 +1,367 @@
+{
+  "start_time": "2025-07-09T10:42:31.095914",
+  "tests": [
+    {
+      "test_name": "REST API設計適合性",
+      "start_time": "2025-07-09T10:42:31.096384",
+      "success": true,
+      "details": {
+        "rest_compliance": {
+          "resource_based_urls": true,
+          "http_methods_usage": true,
+          "stateless_design": true,
+          "json_content_type": true,
+          "status_codes": true,
+          "versioning": true
+        },
+        "compliance_score": "6/6",
+        "api_endpoints": [
+          {
+            "method": "GET",
+            "path": "/api/v1/properties/{id}",
+            "description": "物件情報取得",
+            "idempotent": true,
+            "cache_friendly": true
+          },
+          {
+            "method": "POST",
+            "path": "/api/v1/properties",
+            "description": "物件情報作成",
+            "idempotent": false,
+            "cache_friendly": false
+          },
+          {
+            "method": "PUT",
+            "path": "/api/v1/properties/{id}",
+            "description": "物件情報更新",
+            "idempotent": true,
+            "cache_friendly": false
+          },
+          {
+            "method": "DELETE",
+            "path": "/api/v1/properties/{id}",
+            "description": "物件情報削除",
+            "idempotent": true,
+            "cache_friendly": false
+          }
+        ],
+        "valid_endpoints": "4/4",
+        "error_response_design": {
+          "standard_status_codes": true,
+          "error_details_json": true,
+          "error_codes": true,
+          "user_friendly_messages": true,
+          "developer_info": true
+        }
+      },
+      "errors": [],
+      "end_time": "2025-07-09T10:42:31.096407"
+    },
+    {
+      "test_name": "tRPC統合実現可能性",
+      "start_time": "2025-07-09T10:42:31.096410",
+      "success": true,
+      "details": {
+        "trpc_requirements": {
+          "typescript_support": true,
+          "next_js_compatibility": true,
+          "type_safety": true,
+          "auto_completion": true,
+          "runtime_validation": true,
+          "error_handling": true,
+          "middleware_support": true,
+          "subscription_support": true
+        },
+        "trpc_procedures": [
+          {
+            "name": "property.getById",
+            "type": "query",
+            "input_schema": "z.object({ id: z.string() })",
+            "output_schema": "PropertySchema",
+            "auth_required": true,
+            "cache_duration": 300
+          },
+          {
+            "name": "property.create",
+            "type": "mutation",
+            "input_schema": "CreatePropertySchema",
+            "output_schema": "PropertySchema",
+            "auth_required": true,
+            "cache_duration": 0
+          },
+          {
+            "name": "property.subscribe",
+            "type": "subscription",
+            "input_schema": "z.object({ tenantId: z.string() })",
+            "output_schema": "PropertyUpdateEvent",
+            "auth_required": true,
+            "cache_duration": 0
+          }
+        ],
+        "valid_procedures": "3/3",
+        "performance_considerations": {
+          "batch_requests": true,
+          "query_deduplication": true,
+          "optimistic_updates": true,
+          "cache_invalidation": true,
+          "request_cancellation": true,
+          "error_boundaries": true
+        },
+        "typescript_benefits": [
+          "コンパイル時型チェック",
+          "自動補完・IntelliSense",
+          "リファクタリング安全性",
+          "APIスキーマ自動生成",
+          "ランタイム型検証",
+          "エラーメッセージの型安全性"
+        ],
+        "feasibility_score": "100.0%"
+      },
+      "errors": [],
+      "end_time": "2025-07-09T10:42:31.096657"
+    },
+    {
+      "test_name": "OAuth 2.0認証実装",
+      "start_time": "2025-07-09T10:42:31.096665",
+      "success": true,
+      "details": {
+        "token_payload": {
+          "iss": "realsite-api",
+          "sub": "test_client_123",
+          "aud": "api.realsite.com",
+          "iat": 1752025351,
+          "exp": 1752028951,
+          "scope": [
+            "properties:read",
+            "properties:write",
+            "customers:read"
+          ]
+        },
+        "jwt_signature": "tFBiIkSrDhTFmwThxkWm...",
+        "scope_validation": {
+          "properties:read": true,
+          "properties:write": true,
+          "customers:read": true
+        },
+        "security_requirements": {
+          "tls_enforcement": true,
+          "client_secret_security": true,
+          "token_expiration": true,
+          "scope_restriction": true,
+          "audit_logging": true,
+          "rate_limiting": true
+        },
+        "security_score": "6/6",
+        "auth_flow_steps": [
+          "クライアント登録",
+          "認証情報エンコード",
+          "トークンリクエスト",
+          "スコープ検証",
+          "JWTトークン生成",
+          "トークン検証",
+          "リソースアクセス許可"
+        ]
+      },
+      "errors": [],
+      "end_time": "2025-07-09T10:42:31.098390"
+    },
+    {
+      "test_name": "レートリミット実装",
+      "start_time": "2025-07-09T10:42:31.098397",
+      "success": true,
+      "details": {
+        "token_bucket": {
+          "status": "success",
+          "initial_tokens": 100,
+          "remaining_tokens": 90,
+          "refill_rate": 1.67,
+          "processed_requests": 10
+        },
+        "sliding_window": {
+          "status": "success",
+          "window_size": 60,
+          "current_requests": 85,
+          "limit": 100,
+          "remaining_capacity": 15
+        },
+        "rate_limit_config": {
+          "normal_limit": 100,
+          "burst_limit": 300,
+          "window_seconds": 60,
+          "retry_after": 60,
+          "grace_period": 5
+        },
+        "rate_limit_response": {
+          "status_code": 429,
+          "headers": {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": "100",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": "1752025411"
+          },
+          "body": {
+            "error": "rate_limit_exceeded",
+            "message": "API call rate limit exceeded. Try again later.",
+            "retry_after": 60,
+            "limit": 100,
+            "reset_time": "2025-07-09T10:43:31.098426"
+          }
+        },
+        "optimization_strategies": [
+          "指数バックオフアルゴリズム",
+          "リクエストバッチング",
+          "キャッシュ活用",
+          "非同期処理",
+          "プライオリティキュー",
+          "動的レート調整"
+        ],
+        "performance_test": {
+          "decision_time": 5,
+          "redis_latency": 2,
+          "memory_usage": 10,
+          "throughput": 5000
+        },
+        "implementation_options": {
+          "redis_counter": {
+            "pros": [
+              "高速",
+              "分散対応",
+              "永続化"
+            ],
+            "cons": [
+              "依存追加",
+              "ネットワーク遅延"
+            ],
+            "recommended": true
+          },
+          "in_memory_counter": {
+            "pros": [
+              "最高速",
+              "依存なし"
+            ],
+            "cons": [
+              "単一インスタンス",
+              "再起動で消失"
+            ],
+            "recommended": false
+          },
+          "database_counter": {
+            "pros": [
+              "永続化",
+              "トランザクション"
+            ],
+            "cons": [
+              "低速",
+              "負荷集中"
+            ],
+            "recommended": false
+          }
+        }
+      },
+      "errors": [],
+      "end_time": "2025-07-09T10:42:31.098441"
+    },
+    {
+      "test_name": "APIパフォーマンス・スケーラビリティ",
+      "start_time": "2025-07-09T10:42:31.098443",
+      "success": true,
+      "details": {
+        "performance_targets": {
+          "response_time_95th": 500,
+          "response_time_99th": 2000,
+          "availability": 99.9,
+          "error_rate": 0.1,
+          "throughput": 1000
+        },
+        "perf_simulation": {
+          "avg_response_time": 250,
+          "p95_response_time": 450,
+          "p99_response_time": 1800,
+          "max_throughput": 1200,
+          "error_rate": 0.05
+        },
+        "target_achievement": {
+          "response_time_95th": true,
+          "response_time_99th": true,
+          "throughput": true,
+          "error_rate": true
+        },
+        "achievement_rate": "4/4",
+        "scalability_strategies": {
+          "horizontal_scaling": {
+            "method": "Cloud Run auto-scaling",
+            "max_instances": 100,
+            "scale_trigger": "CPU 80% or Memory 85%",
+            "effectiveness": "高"
+          },
+          "caching": {
+            "method": "Redis + CDN",
+            "cache_hit_ratio": 85,
+            "response_improvement": "60-80%",
+            "effectiveness": "高"
+          },
+          "database_optimization": {
+            "method": "Read Replica + Connection Pooling",
+            "read_write_ratio": "80:20",
+            "query_improvement": "40-60%",
+            "effectiveness": "中"
+          },
+          "load_balancing": {
+            "method": "Google Cloud Load Balancer",
+            "distribution_algorithm": "Round Robin",
+            "health_checks": "enabled",
+            "effectiveness": "高"
+          }
+        },
+        "bottleneck_analysis": [
+          {
+            "component": "Database Query",
+            "current_latency": 45,
+            "optimization": "インデックス最適化・クエリチューニング",
+            "expected_improvement": "30-50%"
+          },
+          {
+            "component": "External API Call",
+            "current_latency": 200,
+            "optimization": "非同期処理・タイムアウト設定",
+            "expected_improvement": "60-80%"
+          },
+          {
+            "component": "JSON Serialization",
+            "current_latency": 15,
+            "optimization": "レスポンス最適化・フィールド制限",
+            "expected_improvement": "20-30%"
+          }
+        ],
+        "monitoring_setup": {
+          "prometheus_metrics": [
+            "http_request_duration_seconds",
+            "http_requests_total",
+            "http_request_size_bytes",
+            "database_connection_pool_size"
+          ],
+          "grafana_dashboards": [
+            "API Performance Overview",
+            "Database Performance",
+            "Error Rate Analysis",
+            "Capacity Planning"
+          ],
+          "alerting_rules": [
+            "Response time > 1s for 5min",
+            "Error rate > 5% for 3min",
+            "Availability < 99% for 10min"
+          ]
+        }
+      },
+      "errors": [],
+      "end_time": "2025-07-09T10:42:31.098467"
+    }
+  ],
+  "summary": {
+    "total_tests": 5,
+    "successful_tests": 5,
+    "success_rate": "100.0%",
+    "overall_success": true
+  },
+  "end_time": "2025-07-09T10:42:31.098469"
+}

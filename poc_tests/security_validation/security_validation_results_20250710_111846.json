@@ -1,0 +1,918 @@
+{
+  "start_time": "2025-07-10T11:18:46.663157",
+  "tests": [
+    {
+      "test_name": "暗号化実装",
+      "start_time": "2025-07-10T11:18:46.663464",
+      "success": true,
+      "details": {
+        "encryption_at_rest": {
+          "valid": true,
+          "database_encryption": {
+            "postgresql_tde": {
+              "method": "Transparent Data Encryption",
+              "algorithm": "AES-256",
+              "scope": "tablespace level",
+              "key_rotation": "automatic",
+              "performance_impact": "< 5%"
+            },
+            "column_level": {
+              "sensitive_fields": [
+                "password",
+                "personal_number",
+                "bank_account"
+              ],
+              "encryption_function": "pgcrypto",
+              "algorithm": "AES-256-GCM",
+              "implementation": "application_level"
+            },
+            "backup_encryption": {
+              "pg_dump_encryption": true,
+              "wal_encryption": true,
+              "archive_encryption": true,
+              "key_management": "AWS KMS"
+            }
+          },
+          "filesystem_encryption": {
+            "disk_encryption": {
+              "method": "dm-crypt + LUKS",
+              "algorithm": "AES-256-XTS",
+              "key_size": "512-bit",
+              "mount_options": "encrypted"
+            },
+            "application_files": {
+              "uploaded_files": "AES-256-GCM",
+              "log_files": "AES-256-CBC",
+              "config_files": "age encryption",
+              "backup_files": "GPG encryption"
+            },
+            "cloud_storage": {
+              "s3_encryption": "SSE-KMS",
+              "encryption_at_rest": "AES-256",
+              "key_management": "AWS KMS",
+              "bucket_policy": "enforce_encryption"
+            }
+          },
+          "application_encryption": {
+            "sensitive_data": {
+              "personal_info": "AES-256-GCM + envelope encryption",
+              "financial_data": "AES-256-GCM + HSM",
+              "api_keys": "sealed secrets",
+              "jwt_secrets": "RS256 private key"
+            },
+            "encryption_libraries": {
+              "nodejs": "crypto (built-in)",
+              "python": "cryptography",
+              "key_derivation": "PBKDF2",
+              "random_generation": "crypto.randomBytes()"
+            },
+            "data_classification": {
+              "public": "暗号化不要",
+              "internal": "基本暗号化",
+              "confidential": "強化暗号化",
+              "secret": "最高レベル暗号化 + HSM"
+            }
+          },
+          "encryption_standards": {
+            "aes_256": "NSA Suite B approved",
+            "fips_140_2": "Level 2 compliance",
+            "common_criteria": "EAL4+ evaluation",
+            "nist_approved": "SP 800-57 compliant"
+          },
+          "performance_considerations": {
+            "cpu_overhead": "< 5%",
+            "storage_overhead": "< 2%",
+            "memory_overhead": "< 10MB",
+            "latency_impact": "< 1ms"
+          },
+          "implementation_timeline": {
+            "phase1": "基本暗号化実装 (2週間)",
+            "phase2": "データベース暗号化 (1週間)",
+            "phase3": "ファイル暗号化 (1週間)",
+            "phase4": "監査・検証 (1週間)"
+          }
+        },
+        "encryption_in_transit": {
+          "valid": true,
+          "tls_configuration": {
+            "tls_version": {
+              "minimum": "TLS 1.2",
+              "preferred": "TLS 1.3",
+              "deprecated": [
+                "TLS 1.0",
+                "TLS 1.1",
+                "SSLv3"
+              ],
+              "cipher_suites": [
+                "TLS_AES_256_GCM_SHA384",
+                "TLS_CHACHA20_POLY1305_SHA256",
+                "TLS_AES_128_GCM_SHA256",
+                "ECDHE-ECDSA-AES256-GCM-SHA384"
+              ]
+            },
+            "certificate_management": {
+              "ca": "Let's Encrypt",
+              "certificate_type": "ECC P-256",
+              "auto_renewal": true,
+              "ocsp_stapling": true,
+              "hsts_enabled": true,
+              "hsts_max_age": 31536000
+            },
+            "perfect_forward_secrecy": {
+              "enabled": true,
+              "key_exchange": "ECDHE",
+              "session_resumption": false,
+              "session_tickets": false
+            }
+          },
+          "network_encryption": {
+            "https_enforcement": {
+              "redirect_http": true,
+              "hsts_preload": true,
+              "secure_cookies": true,
+              "content_security_policy": true
+            },
+            "api_communication": {
+              "tls_mutual_auth": true,
+              "certificate_pinning": true,
+              "api_key_encryption": true,
+              "request_signing": "HMAC-SHA256"
+            },
+            "database_connection": {
+              "ssl_mode": "require",
+              "ssl_cert": "client certificate",
+              "ssl_key": "encrypted private key",
+              "ssl_ca": "certificate authority"
+            },
+            "internal_communication": {
+              "service_mesh": "Istio with mTLS",
+              "pod_to_pod": "encrypted",
+              "load_balancer": "SSL termination",
+              "reverse_proxy": "TLS passthrough"
+            }
+          },
+          "messaging_encryption": {
+            "email_encryption": {
+              "smtp_tls": "STARTTLS",
+              "s_mime": "S/MIME v3",
+              "pgp_support": "OpenPGP",
+              "dkim_signing": true
+            },
+            "webhook_encryption": {
+              "payload_encryption": "AES-256-GCM",
+              "signature_verification": "HMAC-SHA256",
+              "timestamp_validation": true,
+              "replay_protection": true
+            },
+            "file_transfer": {
+              "sftp": "SSH File Transfer Protocol",
+              "ftps": "FTP over SSL/TLS",
+              "https_upload": "multipart/form-data over TLS",
+              "encryption_at_upload": "client-side encryption"
+            }
+          },
+          "security_headers": {
+            "strict_transport_security": "max-age=31536000; includeSubDomains; preload",
+            "content_security_policy": "default-src 'self'; script-src 'self' 'unsafe-inline'",
+            "x_frame_options": "DENY",
+            "x_content_type_options": "nosniff",
+            "referrer_policy": "strict-origin-when-cross-origin"
+          },
+          "monitoring": {
+            "ssl_labs_grade": "A+",
+            "certificate_monitoring": "24/7",
+            "tls_version_compliance": "automated checks",
+            "cipher_suite_updates": "quarterly review"
+          },
+          "performance_optimization": {
+            "tls_session_caching": true,
+            "http2_enabled": true,
+            "connection_reuse": true,
+            "ocsp_stapling": true
+          }
+        },
+        "key_management": {
+          "valid": true,
+          "key_management_service": {
+            "aws_kms": {
+              "customer_managed_keys": true,
+              "key_rotation": "automatic annual",
+              "key_policies": "least privilege",
+              "audit_logging": "CloudTrail",
+              "multi_region": true,
+              "hsm_backing": "FIPS 140-2 Level 3"
+            },
+            "key_hierarchy": {
+              "master_key": "AWS KMS CMK",
+              "data_encryption_keys": "generated per operation",
+              "envelope_encryption": true,
+              "key_derivation": "HKDF-SHA256"
+            },
+            "access_control": {
+              "iam_policies": "role-based access",
+              "key_usage_permissions": "granular",
+              "cross_account_sharing": "controlled",
+              "temporary_access": "STS tokens"
+            }
+          },
+          "key_lifecycle": {
+            "key_generation": {
+              "entropy_source": "hardware RNG",
+              "key_strength": "256-bit minimum",
+              "generation_location": "HSM",
+              "generation_audit": "logged"
+            },
+            "key_distribution": {
+              "secure_channels": "TLS + certificate auth",
+              "key_escrow": "split knowledge",
+              "backup_procedures": "encrypted backups",
+              "geographic_distribution": "multi-region"
+            },
+            "key_rotation": {
+              "automatic_rotation": "configurable intervals",
+              "emergency_rotation": "immediate",
+              "rotation_audit": "full logging",
+              "backward_compatibility": "version tracking"
+            },
+            "key_destruction": {
+              "secure_deletion": "cryptographic erasure",
+              "destruction_audit": "witnessed",
+              "retention_period": "compliance-based",
+              "destruction_verification": "multiple methods"
+            }
+          },
+          "key_storage": {
+            "hsm_integration": {
+              "hsm_type": "AWS CloudHSM",
+              "fips_compliance": "FIPS 140-2 Level 3",
+              "tamper_resistance": "hardware-based",
+              "performance": "> 10,000 ops/sec"
+            },
+            "software_storage": {
+              "encrypted_storage": "AES-256-GCM",
+              "access_control": "file system permissions",
+              "backup_encryption": "separate key",
+              "storage_location": "secure directories"
+            },
+            "key_caching": {
+              "memory_protection": "mlock()",
+              "cache_lifetime": "configurable",
+              "cache_encryption": "in-memory encryption",
+              "cache_clearing": "automatic"
+            }
+          },
+          "key_usage_control": {
+            "usage_policies": {
+              "key_purpose": "single purpose keys",
+              "usage_restrictions": "time-based, location-based",
+              "usage_counting": "operation limits",
+              "usage_monitoring": "real-time alerts"
+            },
+            "separation_of_duties": {
+              "dual_control": "two-person authorization",
+              "split_knowledge": "key splitting",
+              "role_separation": "different roles for different operations",
+              "approval_workflow": "multi-step approval"
+            },
+            "compliance": {
+              "key_management_standards": "NIST SP 800-57",
+              "regulatory_compliance": "GDPR, PCI DSS",
+              "audit_requirements": "quarterly reviews",
+              "certification": "Common Criteria"
+            }
+          },
+          "security_metrics": {
+            "key_generation_entropy": "> 256 bits",
+            "key_rotation_frequency": "annual",
+            "access_audit_coverage": "100%",
+            "compliance_score": "95%"
+          },
+          "operational_procedures": {
+            "key_ceremony": "documented procedures",
+            "incident_response": "key compromise procedures",
+            "disaster_recovery": "key recovery procedures",
+            "business_continuity": "backup key infrastructure"
+          },
+          "cost_considerations": {
+            "aws_kms_cost": "$1/key/month",
+            "hsm_cost": "$1,500/month",
+            "operational_cost": "automation reduces costs",
+            "compliance_cost": "audit and certification"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:18:46.663490"
+    },
+    {
+      "test_name": "脆弱性管理",
+      "start_time": "2025-07-10T11:18:46.663493",
+      "success": true,
+      "details": {
+        "vulnerability_scanning": {
+          "valid": true,
+          "automated_scanning": {
+            "sast": {
+              "tool": "SonarQube",
+              "languages": [
+                "TypeScript",
+                "JavaScript",
+                "Python"
+              ],
+              "integration": "CI/CD pipeline",
+              "frequency": "every commit",
+              "coverage": "> 80%"
+            },
+            "dast": {
+              "tool": "OWASP ZAP",
+              "scan_types": [
+                "baseline",
+                "full",
+                "api"
+              ],
+              "integration": "staging environment",
+              "frequency": "nightly",
+              "authentication": "session-based"
+            },
+            "dependency_scanning": {
+              "tool": "Snyk",
+              "package_managers": [
+                "npm",
+                "pip",
+                "docker"
+              ],
+              "vulnerability_db": "National Vulnerability Database",
+              "frequency": "continuous",
+              "auto_remediation": "patch suggestions"
+            },
+            "container_scanning": {
+              "tool": "Trivy",
+              "registry_scanning": true,
+              "runtime_scanning": true,
+              "compliance_checks": "CIS benchmarks",
+              "integration": "Docker build"
+            }
+          },
+          "network_scanning": {
+            "port_scanning": {
+              "tool": "Nmap",
+              "scope": "external + internal",
+              "frequency": "weekly",
+              "reporting": "automated"
+            },
+            "ssl_scanning": {
+              "tool": "testssl.sh",
+              "checks": [
+                "cipher suites",
+                "protocols",
+                "certificates"
+              ],
+              "frequency": "daily",
+              "compliance": "SSL Labs A+"
+            },
+            "web_scanning": {
+              "tool": "Nikto",
+              "scope": "all web applications",
+              "frequency": "weekly",
+              "authentication": "credential-based"
+            }
+          },
+          "cloud_security_scanning": {
+            "aws_config": {
+              "compliance_rules": "CIS AWS Foundations",
+              "continuous_monitoring": true,
+              "remediation": "automated",
+              "notifications": "SNS alerts"
+            },
+            "security_hub": {
+              "integration": "multi-service",
+              "standards": [
+                "AWS Foundational",
+                "CIS",
+                "PCI DSS"
+              ],
+              "findings_aggregation": true,
+              "custom_insights": true
+            },
+            "inspector": {
+              "ec2_assessment": true,
+              "container_assessment": true,
+              "network_reachability": true,
+              "reporting": "automated"
+            }
+          },
+          "scanning_schedule": {
+            "continuous": "SAST, dependency scanning",
+            "daily": "SSL scanning, container scanning",
+            "weekly": "DAST, network scanning",
+            "monthly": "comprehensive assessment"
+          },
+          "vulnerability_metrics": {
+            "detection_time": "< 24 hours",
+            "false_positive_rate": "< 10%",
+            "coverage": "> 95%",
+            "remediation_time": "< 30 days"
+          },
+          "integration": {
+            "ci_cd_pipeline": "automated blocking",
+            "issue_tracking": "Jira integration",
+            "notification_channels": "Slack, email",
+            "dashboard": "unified security dashboard"
+          }
+        },
+        "penetration_testing": {
+          "valid": true,
+          "annual_pentest": {
+            "scope": {
+              "web_applications": "全フロントエンド",
+              "api_endpoints": "全API",
+              "infrastructure": "ネットワーク・サーバー",
+              "mobile_apps": "モバイルアプリ（将来）"
+            },
+            "methodology": {
+              "framework": "OWASP Testing Guide",
+              "standards": "NIST SP 800-115",
+              "approach": "black box + gray box",
+              "social_engineering": "limited scope"
+            },
+            "third_party_vendor": {
+              "selection_criteria": "certified testers",
+              "certifications": [
+                "OSCP",
+                "CEH",
+                "CISSP"
+              ],
+              "experience": "SaaS applications",
+              "references": "similar industry"
+            },
+            "deliverables": {
+              "executive_summary": "business risk focus",
+              "technical_report": "detailed findings",
+              "remediation_plan": "prioritized actions",
+              "retest_report": "verification testing"
+            }
+          },
+          "continuous_testing": {
+            "bug_bounty": {
+              "platform": "HackerOne",
+              "scope": "production environment",
+              "rewards": "tiered bounty program",
+              "researchers": "vetted security researchers"
+            },
+            "red_team_exercises": {
+              "frequency": "quarterly",
+              "scenario": "APT simulation",
+              "scope": "end-to-end attack",
+              "coordination": "blue team response"
+            },
+            "purple_team": {
+              "collaboration": "red + blue teams",
+              "knowledge_sharing": "tactics and techniques",
+              "improvement": "continuous feedback",
+              "training": "skills development"
+            }
+          },
+          "specialized_testing": {
+            "api_security": {
+              "owasp_api_top10": "comprehensive coverage",
+              "authentication_testing": "OAuth 2.0 flows",
+              "authorization_testing": "RBAC validation",
+              "rate_limiting": "abuse testing"
+            },
+            "cloud_security": {
+              "aws_security": "configuration assessment",
+              "container_security": "Docker/Kubernetes",
+              "serverless_security": "Lambda functions",
+              "data_protection": "encryption validation"
+            },
+            "compliance_testing": {
+              "gdpr_compliance": "data protection validation",
+              "pci_dss": "payment security (if applicable)",
+              "iso27001": "information security controls",
+              "nist_framework": "cybersecurity assessment"
+            }
+          },
+          "testing_schedule": {
+            "annual": "comprehensive penetration test",
+            "quarterly": "red team exercises",
+            "monthly": "automated security testing",
+            "continuous": "bug bounty program"
+          },
+          "remediation_process": {
+            "critical_findings": "24 hours",
+            "high_findings": "7 days",
+            "medium_findings": "30 days",
+            "low_findings": "next release cycle"
+          },
+          "reporting_requirements": {
+            "executive_briefing": "business impact focus",
+            "technical_details": "developer-friendly",
+            "compliance_mapping": "regulatory requirements",
+            "trend_analysis": "historical comparison"
+          }
+        },
+        "patch_management": {
+          "valid": true,
+          "patch_management_process": {
+            "vulnerability_assessment": {
+              "severity_classification": "Critical, High, Medium, Low",
+              "cvss_scoring": "CVSS v3.1",
+              "impact_analysis": "business risk assessment",
+              "timeline": "24 hours for assessment"
+            },
+            "patch_prioritization": {
+              "critical_patches": "24 hours",
+              "high_patches": "7 days",
+              "medium_patches": "30 days",
+              "low_patches": "next maintenance window"
+            },
+            "testing_procedures": {
+              "dev_environment": "initial testing",
+              "staging_environment": "full integration testing",
+              "canary_deployment": "limited production rollout",
+              "monitoring": "post-deployment verification"
+            },
+            "deployment_strategy": {
+              "emergency_patches": "immediate deployment",
+              "scheduled_maintenance": "planned windows",
+              "rolling_updates": "zero-downtime deployment",
+              "rollback_procedures": "automated rollback"
+            }
+          },
+          "automation_tools": {
+            "dependency_management": {
+              "renovate": "automated dependency updates",
+              "dependabot": "GitHub security alerts",
+              "snyk": "vulnerability remediation",
+              "integration": "CI/CD pipeline"
+            },
+            "infrastructure_patching": {
+              "aws_systems_manager": "EC2 patch management",
+              "ansible": "configuration management",
+              "terraform": "infrastructure as code",
+              "kubernetes": "container updates"
+            },
+            "application_updates": {
+              "blue_green_deployment": "zero-downtime updates",
+              "feature_flags": "gradual rollout",
+              "health_checks": "automated verification",
+              "monitoring": "real-time metrics"
+            }
+          },
+          "patch_testing": {
+            "automated_testing": {
+              "unit_tests": "code functionality",
+              "integration_tests": "system integration",
+              "security_tests": "vulnerability verification",
+              "performance_tests": "impact assessment"
+            },
+            "manual_testing": {
+              "functional_testing": "user workflows",
+              "security_validation": "manual verification",
+              "compatibility_testing": "browser/device testing",
+              "usability_testing": "user experience"
+            },
+            "acceptance_criteria": {
+              "security_validation": "vulnerability fixed",
+              "functional_verification": "no regression",
+              "performance_impact": "< 5% degradation",
+              "user_experience": "no usability issues"
+            }
+          },
+          "compliance_requirements": {
+            "sla_adherence": "> 95%",
+            "documentation": "complete audit trail",
+            "approval_process": "change management",
+            "emergency_procedures": "incident response"
+          },
+          "metrics_tracking": {
+            "mean_time_to_patch": "< 7 days",
+            "patch_success_rate": "> 98%",
+            "rollback_frequency": "< 2%",
+            "security_incident_reduction": "> 80%"
+          },
+          "communication": {
+            "stakeholder_notification": "automated alerts",
+            "maintenance_windows": "advance notice",
+            "status_updates": "real-time dashboard",
+            "post_mortem": "lessons learned"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:18:46.663572"
+    },
+    {
+      "test_name": "データ保護・コンプライアンス",
+      "start_time": "2025-07-10T11:18:46.663573",
+      "success": true,
+      "details": {
+        "data_protection": {
+          "valid": true,
+          "data_classification": {
+            "classification_levels": {
+              "public": {
+                "description": "一般公開情報",
+                "examples": [
+                  "会社情報",
+                  "製品情報"
+                ],
+                "protection_level": "基本",
+                "retention": "無期限"
+              },
+              "internal": {
+                "description": "社内情報",
+                "examples": [
+                  "業務データ",
+                  "システム情報"
+                ],
+                "protection_level": "標準",
+                "retention": "5年"
+              },
+              "confidential": {
+                "description": "機密情報",
+                "examples": [
+                  "顧客情報",
+                  "契約情報"
+                ],
+                "protection_level": "強化",
+                "retention": "7年"
+              },
+              "secret": {
+                "description": "極秘情報",
+                "examples": [
+                  "個人番号",
+                  "金融情報"
+                ],
+                "protection_level": "最高",
+                "retention": "法定期間"
+              }
+            },
+            "classification_process": {
+              "automatic_classification": "AI-based detection",
+              "manual_classification": "data owner responsibility",
+              "labeling_system": "metadata tagging",
+              "policy_enforcement": "access control integration"
+            }
+          },
+          "data_lifecycle": {
+            "creation": {
+              "data_validation": "input sanitization",
+              "classification_assignment": "automatic",
+              "access_control": "role-based",
+              "audit_logging": "creation events"
+            },
+            "storage": {
+              "encryption_at_rest": "AES-256",
+              "geographic_restrictions": "data residency",
+              "backup_procedures": "encrypted backups",
+              "access_monitoring": "continuous"
+            },
+            "processing": {
+              "data_minimization": "purpose limitation",
+              "processing_logs": "comprehensive logging",
+              "third_party_sharing": "consent-based",
+              "anonymization": "k-anonymity"
+            },
+            "retention": {
+              "retention_policies": "classification-based",
+              "automatic_deletion": "policy-driven",
+              "legal_holds": "litigation support",
+              "disposal_verification": "secure deletion"
+            }
+          },
+          "data_security": {
+            "access_controls": {
+              "authentication": "multi-factor",
+              "authorization": "attribute-based",
+              "least_privilege": "minimal access",
+              "regular_review": "quarterly"
+            },
+            "data_loss_prevention": {
+              "network_dlp": "egress monitoring",
+              "endpoint_dlp": "device protection",
+              "email_dlp": "content inspection",
+              "cloud_dlp": "SaaS protection"
+            },
+            "backup_security": {
+              "encryption": "AES-256",
+              "geographic_distribution": "multi-region",
+              "access_control": "restricted",
+              "integrity_verification": "checksums"
+            }
+          },
+          "implementation_tools": {
+            "classification": "Microsoft Purview",
+            "dlp": "Forcepoint DLP",
+            "backup": "AWS Backup",
+            "monitoring": "Splunk"
+          },
+          "compliance_mapping": {
+            "gdpr": "data protection by design",
+            "personal_info_protection": "personal data handling",
+            "industry_standards": "ISO 27001",
+            "regulatory_requirements": "sector-specific"
+          },
+          "performance_impact": {
+            "classification_overhead": "< 2%",
+            "encryption_overhead": "< 5%",
+            "monitoring_overhead": "< 3%",
+            "total_overhead": "< 10%"
+          }
+        },
+        "compliance": {
+          "valid": true,
+          "gdpr_compliance": {
+            "data_subject_rights": {
+              "right_to_access": "データポータビリティ",
+              "right_to_rectification": "データ修正",
+              "right_to_erasure": "削除権（忘れられる権利）",
+              "right_to_restrict": "処理制限権",
+              "right_to_object": "処理への異議",
+              "right_to_portability": "データ移転権"
+            },
+            "legal_basis": {
+              "consent": "明示的同意",
+              "contract": "契約履行",
+              "legal_obligation": "法的義務",
+              "vital_interests": "重要な利益",
+              "public_task": "公的任務",
+              "legitimate_interests": "正当な利益"
+            },
+            "implementation": {
+              "privacy_by_design": "システム設計",
+              "privacy_by_default": "デフォルト設定",
+              "data_protection_impact_assessment": "DPIA実施",
+              "data_protection_officer": "DPO任命"
+            }
+          },
+          "personal_info_protection": {
+            "personal_data_handling": {
+              "collection_limitation": "収集制限",
+              "purpose_specification": "目的明示",
+              "use_limitation": "利用制限",
+              "data_quality": "データ品質",
+              "security_safeguards": "安全管理措置",
+              "openness": "透明性",
+              "individual_participation": "個人参加",
+              "accountability": "責任"
+            },
+            "security_measures": {
+              "organizational_measures": "組織的安全管理措置",
+              "human_measures": "人的安全管理措置",
+              "physical_measures": "物理的安全管理措置",
+              "technical_measures": "技術的安全管理措置"
+            }
+          },
+          "iso27001_compliance": {
+            "isms_requirements": {
+              "context_establishment": "組織の状況",
+              "leadership": "リーダーシップ",
+              "planning": "計画",
+              "support": "支援",
+              "operation": "運用",
+              "performance_evaluation": "パフォーマンス評価",
+              "improvement": "改善"
+            },
+            "control_objectives": {
+              "information_security_policies": "情報セキュリティ方針",
+              "organization_of_information_security": "情報セキュリティ組織",
+              "human_resource_security": "人的資源のセキュリティ",
+              "asset_management": "資産の管理",
+              "access_control": "アクセス制御",
+              "cryptography": "暗号化",
+              "physical_security": "物理的及び環境的セキュリティ",
+              "operations_security": "運用のセキュリティ",
+              "communications_security": "通信のセキュリティ",
+              "acquisition_development": "システムの取得、開発及び保守",
+              "supplier_relationships": "供給者関係",
+              "incident_management": "情報セキュリティインシデント管理",
+              "business_continuity": "事業継続マネジメント",
+              "compliance": "順守"
+            }
+          },
+          "compliance_framework": {
+            "policy_management": "文書化されたポリシー",
+            "training_program": "従業員教育",
+            "audit_program": "内部監査",
+            "incident_response": "インシデント対応",
+            "business_continuity": "事業継続計画",
+            "supplier_management": "サプライヤー管理"
+          },
+          "certification_timeline": {
+            "phase1": "ギャップ分析 (1ヶ月)",
+            "phase2": "ポリシー策定 (2ヶ月)",
+            "phase3": "実装・テスト (3ヶ月)",
+            "phase4": "内部監査 (1ヶ月)",
+            "phase5": "認証審査 (1ヶ月)"
+          },
+          "ongoing_compliance": {
+            "quarterly_reviews": "コンプライアンス状況確認",
+            "annual_audits": "第三者監査",
+            "policy_updates": "法令変更対応",
+            "training_updates": "継続教育"
+          }
+        },
+        "privacy_management": {
+          "valid": true,
+          "privacy_by_design": {
+            "fundamental_principles": {
+              "proactive_not_reactive": "事前対応",
+              "privacy_as_default": "デフォルトプライバシー",
+              "full_functionality": "完全な機能性",
+              "end_to_end_security": "エンドツーエンドセキュリティ",
+              "visibility_transparency": "可視性と透明性",
+              "respect_for_user_privacy": "ユーザープライバシーの尊重"
+            },
+            "implementation_strategies": {
+              "data_minimization": "最小限のデータ収集",
+              "purpose_limitation": "目的制限",
+              "storage_limitation": "保存制限",
+              "accuracy": "正確性",
+              "security": "セキュリティ",
+              "accountability": "説明責任"
+            }
+          },
+          "consent_management": {
+            "consent_requirements": {
+              "informed_consent": "十分な情報に基づく同意",
+              "specific_consent": "特定の同意",
+              "unambiguous_consent": "明確な同意",
+              "freely_given_consent": "自由に与えられた同意"
+            },
+            "consent_platform": {
+              "consent_capture": "同意取得UI",
+              "consent_storage": "同意履歴保存",
+              "consent_withdrawal": "同意撤回機能",
+              "consent_verification": "同意確認機能"
+            },
+            "granular_controls": {
+              "purpose_based_consent": "目的別同意",
+              "data_type_consent": "データ種別同意",
+              "processing_activity_consent": "処理活動同意",
+              "third_party_sharing_consent": "第三者提供同意"
+            }
+          },
+          "data_subject_rights": {
+            "rights_implementation": {
+              "access_request": {
+                "self_service_portal": "セルフサービス",
+                "response_time": "30日以内",
+                "data_format": "構造化形式",
+                "verification": "本人確認"
+              },
+              "rectification": {
+                "correction_interface": "修正インターフェース",
+                "downstream_updates": "連携システム更新",
+                "audit_trail": "変更履歴",
+                "notification": "変更通知"
+              },
+              "erasure": {
+                "deletion_workflow": "削除ワークフロー",
+                "complete_removal": "完全削除",
+                "backup_handling": "バックアップ処理",
+                "verification": "削除確認"
+              },
+              "portability": {
+                "export_functionality": "エクスポート機能",
+                "standard_formats": "標準フォーマット",
+                "secure_transfer": "安全な転送",
+                "data_integrity": "データ整合性"
+              }
+            }
+          },
+          "privacy_tools": {
+            "privacy_dashboard": "個人向けダッシュボード",
+            "consent_manager": "同意管理システム",
+            "data_mapping": "データフロー可視化",
+            "impact_assessment": "プライバシー影響評価"
+          },
+          "automation": {
+            "automated_deletion": "自動削除",
+            "consent_renewal": "同意更新",
+            "privacy_notices": "プライバシー通知",
+            "breach_notification": "侵害通知"
+          },
+          "governance": {
+            "privacy_officer": "プライバシーオフィサー",
+            "privacy_committee": "プライバシー委員会",
+            "training_program": "プライバシー教育",
+            "vendor_management": "ベンダー管理"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:18:46.663592"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "successful_tests": 3,
+    "success_rate": "100.0%",
+    "overall_success": true
+  },
+  "end_time": "2025-07-10T11:18:46.663607"
+}

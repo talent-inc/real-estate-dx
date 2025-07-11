@@ -1,0 +1,774 @@
+// Prisma Schema for Real Estate DX System
+// Google Cloud対応・マルチテナント・包括的スキーマ
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ====================================
+// 認証・ユーザー管理
+// ====================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?  // OAuth users may not have password
+  name      String
+  avatar    String?
+  phone     String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  
+  // Multi-tenant
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // OAuth
+  providers UserProvider[]
+  
+  // Timestamps
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  properties     Property[]
+  documents      Document[]
+  activities     Activity[]
+  notifications  Notification[]
+  createdTenants Tenant[] @relation("TenantCreatedBy")
+  
+  // Audit
+  createdById String?
+  createdBy   User?  @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers User[] @relation("UserCreatedBy")
+
+  @@map("users")
+}
+
+model UserProvider {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String // google, microsoft, etc.
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([provider, providerId])
+  @@unique([userId, provider])
+  @@map("user_providers")
+}
+
+enum UserRole {
+  SUPER_ADMIN    // システム全体管理者
+  TENANT_ADMIN   // テナント管理者
+  MANAGER        // 管理者
+  AGENT          // 営業担当
+  USER           // 一般ユーザー
+  VIEWER         // 閲覧のみ
+}
+
+// ====================================
+// テナント管理（マルチテナント）
+// ====================================
+
+model Tenant {
+  id          String      @id @default(cuid())
+  name        String
+  domain      String      @unique
+  subdomain   String?     @unique
+  plan        TenantPlan  @default(FREE)
+  status      TenantStatus @default(ACTIVE)
+  settings    Json?       // tenant-specific settings
+  
+  // Billing
+  stripeCustomerId String?
+  subscriptionId   String?
+  billingEmail     String?
+  
+  // Limits
+  maxUsers      Int @default(5)
+  maxProperties Int @default(100)
+  maxStorage    Int @default(1073741824) // 1GB in bytes
+  
+  // Usage tracking
+  currentUsers      Int @default(0)
+  currentProperties Int @default(0)
+  currentStorage    Int @default(0)
+  
+  // Timestamps
+  trialEndsAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  users       User[]
+  properties  Property[]
+  documents   Document[]
+  activities  Activity[]
+  externalSystems ExternalSystemAuth[]
+  
+  // Audit
+  createdById String?
+  createdBy   User?  @relation("TenantCreatedBy", fields: [createdById], references: [id])
+
+  @@map("tenants")
+}
+
+enum TenantPlan {
+  FREE
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  CANCELLED
+}
+
+// ====================================
+// 物件管理
+// ====================================
+
+model Property {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  
+  // Basic Info
+  price       Decimal        @db.Decimal(15, 2)
+  area        Float          // 面積 (m²)
+  address     String
+  postalCode  String?
+  prefecture  String?
+  city        String?
+  district    String?
+  
+  // Location
+  lat         Float?
+  lng         Float?
+  
+  // Property Details
+  propertyType PropertyType
+  buildingType BuildingType?
+  rooms        Int?          // 部屋数
+  bathrooms    Int?          // 浴室数
+  parkingSpots Int?          // 駐車場数
+  floorNumber  Int?          // 階数
+  totalFloors  Int?          // 総階数
+  buildYear    Int?          // 築年
+  
+  // Status
+  status       PropertyStatus @default(DRAFT)
+  isPublic     Boolean        @default(false)
+  isFeatured   Boolean        @default(false)
+  
+  // SEO
+  slug         String?        @unique
+  metaTitle    String?
+  metaDescription String?
+  
+  // Timestamps
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+  soldAt       DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  // Multi-tenant
+  tenantId     String
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  images       PropertyImage[]
+  documents    Document[]
+  activities   Activity[]
+  inquiries    Inquiry[]
+  contracts    Contract[]
+  
+  // External IDs (for integrations)
+  reinsId      String?        // REINS ID
+  athomeId     String?        // AtHome ID
+  hatosapoId   String?        // Hatosapo ID
+
+  @@map("properties")
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  filename   String
+  originalName String
+  url        String
+  thumbnailUrl String?
+  size       Int
+  mimeType   String
+  width      Int?
+  height     Int?
+  
+  // Metadata
+  caption    String?
+  altText    String?
+  order      Int      @default(0)
+  isMain     Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("property_images")
+}
+
+enum PropertyType {
+  APARTMENT      // マンション
+  HOUSE         // 一戸建て
+  LAND          // 土地
+  OFFICE        // オフィス
+  RETAIL        // 店舗
+  WAREHOUSE     // 倉庫
+  OTHER         // その他
+}
+
+enum BuildingType {
+  REINFORCED_CONCRETE  // 鉄筋コンクリート
+  STEEL_FRAME         // 鉄骨造
+  WOOD_FRAME          // 木造
+  LIGHT_STEEL         // 軽量鉄骨造
+  OTHER              // その他
+}
+
+enum PropertyStatus {
+  DRAFT      // 下書き
+  ACTIVE     // 公開中
+  PENDING    // 審査中
+  SOLD       // 売却済み
+  WITHDRAWN  // 取り下げ
+  EXPIRED    // 期限切れ
+}
+
+// ====================================
+// 文書管理・AI-OCR
+// ====================================
+
+model Document {
+  id           String       @id @default(cuid())
+  filename     String
+  originalName String
+  url          String
+  size         Int
+  mimeType     String
+  
+  // Document Classification
+  type         DocumentType
+  category     String?      // サブカテゴリ
+  
+  // OCR Results
+  ocrStatus    OcrStatus    @default(PENDING)
+  ocrResult    Json?        // OCR extracted data
+  ocrConfidence Float?      // OCR confidence score
+  
+  // Processing
+  processedAt  DateTime?
+  processingTime Int?       // milliseconds
+  errorMessage String?
+  
+  // Relations
+  propertyId   String?
+  property     Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  
+  // Multi-tenant
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  
+  // Timestamps
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("documents")
+}
+
+enum DocumentType {
+  PROPERTY_DEED    // 登記簿謄本
+  FLOOR_PLAN      // 間取り図
+  PHOTO           // 写真
+  CONTRACT        // 契約書
+  CERTIFICATE     // 証明書
+  APPRAISAL       // 査定書
+  INSPECTION      // 検査報告書
+  OTHER           // その他
+}
+
+enum OcrStatus {
+  PENDING      // 処理待ち
+  PROCESSING   // 処理中
+  COMPLETED    // 完了
+  FAILED       // 失敗
+  RETRY        // 再試行
+}
+
+// ====================================
+// 顧客管理・問い合わせ
+// ====================================
+
+model Inquiry {
+  id         String        @id @default(cuid())
+  
+  // Contact Info
+  name       String
+  email      String
+  phone      String?
+  company    String?
+  
+  // Inquiry Details
+  subject    String
+  message    String
+  type       InquiryType   @default(GENERAL)
+  status     InquiryStatus @default(NEW)
+  priority   Priority      @default(MEDIUM)
+  
+  // Property relation
+  propertyId String?
+  property   Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  
+  // Assignment
+  assignedToId String?
+  assignedTo   User?       @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Response
+  responseMessage String?
+  respondedAt     DateTime?
+  respondedById   String?
+  
+  // Multi-tenant
+  tenantId   String
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Timestamps
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  
+  // Relations
+  activities Activity[]
+
+  @@map("inquiries")
+}
+
+enum InquiryType {
+  GENERAL      // 一般問い合わせ
+  VIEWING      // 内見希望
+  PURCHASE     // 購入希望
+  INFORMATION  // 資料請求
+  COMPLAINT    // 苦情
+  OTHER        // その他
+}
+
+enum InquiryStatus {
+  NEW          // 新規
+  IN_PROGRESS  // 対応中
+  RESPONDED    // 回答済み
+  CLOSED       // 完了
+  SPAM         // スパム
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ====================================
+// 契約管理
+// ====================================
+
+model Contract {
+  id           String         @id @default(cuid())
+  contractNumber String       @unique
+  
+  // Contract Details
+  type         ContractType
+  status       ContractStatus @default(DRAFT)
+  amount       Decimal        @db.Decimal(15, 2)
+  
+  // Parties
+  buyerName    String
+  buyerEmail   String?
+  buyerPhone   String?
+  sellerName   String
+  sellerEmail  String?
+  sellerPhone  String?
+  
+  // Dates
+  signedAt     DateTime?
+  effectiveAt  DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  
+  // Relations
+  propertyId   String
+  property     Property       @relation(fields: [propertyId], references: [id])
+  
+  // Multi-tenant
+  tenantId     String
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  
+  // Documents
+  documents    Json?          // contract documents metadata
+  
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("contracts")
+}
+
+enum ContractType {
+  SALE         // 売買契約
+  RENTAL       // 賃貸契約
+  LEASE        // リース契約
+  OPTION       // オプション契約
+}
+
+enum ContractStatus {
+  DRAFT        // 下書き
+  PENDING      // 承認待ち
+  ACTIVE       // 有効
+  COMPLETED    // 完了
+  CANCELLED    // キャンセル
+  EXPIRED      // 期限切れ
+}
+
+// ====================================
+// アクティビティ・監査ログ
+// ====================================
+
+model Activity {
+  id         String         @id @default(cuid())
+  
+  // Activity Details
+  type       ActivityType
+  action     String         // create, update, delete, view, etc.
+  entity     String         // table name
+  entityId   String         // record id
+  
+  // Change Details
+  oldValues  Json?          // before state
+  newValues  Json?          // after state
+  metadata   Json?          // additional context
+  
+  // User Context
+  userId     String?
+  user       User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userAgent  String?
+  ipAddress  String?
+  
+  // Relations
+  propertyId String?
+  property   Property?      @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  
+  inquiryId  String?
+  inquiry    Inquiry?       @relation(fields: [inquiryId], references: [id], onDelete: SetNull)
+  
+  // Multi-tenant
+  tenantId   String
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime       @default(now())
+
+  @@map("activities")
+}
+
+enum ActivityType {
+  USER           // ユーザー関連
+  PROPERTY       // 物件関連
+  DOCUMENT       // 文書関連
+  INQUIRY        // 問い合わせ関連
+  CONTRACT       // 契約関連
+  SYSTEM         // システム関連
+  SECURITY       // セキュリティ関連
+}
+
+// ====================================
+// 通知システム
+// ====================================
+
+model Notification {
+  id        String            @id @default(cuid())
+  
+  // Notification Details
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?             // additional data
+  
+  // Status
+  isRead    Boolean           @default(false)
+  readAt    DateTime?
+  
+  // Delivery
+  channels  NotificationChannel[]
+  sentAt    DateTime?
+  
+  // Relations
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Multi-tenant
+  tenantId  String
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO       // 情報
+  SUCCESS    // 成功
+  WARNING    // 警告
+  ERROR      // エラー
+  REMINDER   // リマインダー
+  UPDATE     // 更新通知
+}
+
+enum NotificationChannel {
+  WEB        // Web通知
+  EMAIL      // メール
+  SMS        // SMS
+  PUSH       // プッシュ通知
+}
+
+// ====================================
+// 外部システム連携
+// ====================================
+
+model ExternalSystemAuth {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // System Info
+  systemType  ExternalSystemType
+  systemName  String   // "REINS", "AtHome", "ハトサポ"
+  
+  // Encrypted Credentials
+  encryptedUsername String   // 暗号化済みユーザー名
+  encryptedPassword String   // 暗号化済みパスワード
+  encryptedApiKey   String?  // 暗号化済みAPIキー
+  
+  // Encryption Metadata
+  encryptionIv      String   // 初期化ベクター
+  encryptionAuthTag String   // 認証タグ
+  encryptionAlgorithm String @default("aes-256-gcm")
+  
+  // Connection Status
+  isActive    Boolean  @default(true)
+  lastTestAt  DateTime?
+  lastSyncAt  DateTime?
+  lastError   String?
+  
+  // System Settings
+  settings    Json?    // システム固有設定
+  
+  // Sync Configuration
+  syncEnabled Boolean  @default(true)
+  syncSchedule String? // cron形式
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  syncLogs    ExternalSyncLog[]
+  
+  @@unique([tenantId, systemType])
+  @@map("external_system_auth")
+}
+
+model ExternalSyncLog {
+  id               String   @id @default(cuid())
+  
+  // System Info
+  externalAuthId   String
+  externalAuth     ExternalSystemAuth @relation(fields: [externalAuthId], references: [id], onDelete: Cascade)
+  
+  // Sync Details
+  syncType         SyncType // FULL, INCREMENTAL, MANUAL
+  syncDirection    SyncDirection // IMPORT, EXPORT, BIDIRECTIONAL
+  
+  // Status
+  status           SyncStatus
+  startedAt        DateTime
+  completedAt      DateTime?
+  
+  // Results
+  totalRecords     Int      @default(0)
+  successRecords   Int      @default(0)
+  failedRecords    Int      @default(0)
+  
+  // Error Details
+  errorMessage     String?
+  errorDetails     Json?
+  
+  // Metadata
+  metadata         Json?
+  
+  @@map("external_sync_logs")
+}
+
+enum ExternalSystemType {
+  REINS        // 指定流通機構
+  ATHOME       // アットホーム
+  HATOSAPO     // ハトマークサポート
+  HOMES        // ホームズ
+  SUUMO        // スーモ
+  LIFULL       // ライフル
+  RAKUTEN      // 楽天不動産
+  YAHOO        // Yahoo不動産
+  CUSTOM       // カスタム連携
+}
+
+enum SyncType {
+  FULL         // 全件同期
+  INCREMENTAL  // 差分同期
+  MANUAL       // 手動同期
+}
+
+enum SyncDirection {
+  IMPORT       // 外部 → 内部
+  EXPORT       // 内部 → 外部
+  BIDIRECTIONAL // 双方向
+}
+
+enum SyncStatus {
+  PENDING      // 実行待ち
+  RUNNING      // 実行中
+  COMPLETED    // 完了
+  FAILED       // 失敗
+  CANCELLED    // キャンセル
+}
+
+// ====================================
+// システム設定・法令管理
+// ====================================
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  category  String?
+  
+  // Metadata
+  description String?
+  isPublic    Boolean  @default(false)
+  isEditable  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+model LegalUpdate {
+  id          String   @id @default(cuid())
+  
+  // Legal Document Info
+  title       String
+  description String?
+  lawType     String   // 法令種別
+  lawNumber   String?  // 法令番号
+  
+  // Change Details
+  changeType  String   // 新規、改正、廃止
+  summary     String   // 変更要約
+  impact      String?  // 影響度評価
+  
+  // URLs and References
+  sourceUrl   String?  // 元データURL
+  pdfUrl      String?  // PDF URL
+  
+  // Dates
+  publishedAt DateTime // 公布日
+  effectiveAt DateTime // 施行日
+  
+  // Processing
+  isProcessed Boolean  @default(false)
+  processedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("legal_updates")
+}
+
+// ====================================
+// インデックス定義
+// ====================================
+
+// User indexes
+@@index([email], map: "idx_users_email")
+@@index([tenantId], map: "idx_users_tenant_id")
+@@index([role], map: "idx_users_role")
+
+// Property indexes  
+@@index([tenantId], map: "idx_properties_tenant_id")
+@@index([status], map: "idx_properties_status")
+@@index([propertyType], map: "idx_properties_type")
+@@index([price], map: "idx_properties_price")
+@@index([area], map: "idx_properties_area")
+@@index([prefecture, city], map: "idx_properties_location")
+@@index([publishedAt], map: "idx_properties_published_at")
+@@index([createdAt], map: "idx_properties_created_at")
+
+// Document indexes
+@@index([tenantId], map: "idx_documents_tenant_id")
+@@index([type], map: "idx_documents_type")
+@@index([ocrStatus], map: "idx_documents_ocr_status")
+@@index([propertyId], map: "idx_documents_property_id")
+
+// Activity indexes (for audit trail)
+@@index([tenantId], map: "idx_activities_tenant_id")
+@@index([userId], map: "idx_activities_user_id")
+@@index([type], map: "idx_activities_type")
+@@index([createdAt], map: "idx_activities_created_at")
+@@index([entity, entityId], map: "idx_activities_entity")
+
+// Inquiry indexes
+@@index([tenantId], map: "idx_inquiries_tenant_id")
+@@index([status], map: "idx_inquiries_status")
+@@index([assignedToId], map: "idx_inquiries_assigned_to")
+@@index([createdAt], map: "idx_inquiries_created_at")
+
+// External System indexes
+@@index([tenantId], map: "idx_external_auth_tenant_id")
+@@index([systemType], map: "idx_external_auth_system_type")
+@@index([isActive], map: "idx_external_auth_active")
+@@index([lastSyncAt], map: "idx_external_auth_last_sync")
+
+// External Sync Log indexes
+@@index([externalAuthId], map: "idx_sync_logs_auth_id")
+@@index([status], map: "idx_sync_logs_status")
+@@index([startedAt], map: "idx_sync_logs_started_at")
+@@index([syncType], map: "idx_sync_logs_sync_type")

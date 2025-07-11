@@ -1,0 +1,106 @@
+{
+  "start_time": "2025-07-09T09:07:19.750288",
+  "tests": [
+    {
+      "test_name": "初期アクセス",
+      "start_time": "2025-07-09T09:07:19.750873",
+      "success": true,
+      "details": {
+        "response_code": 200,
+        "content_length": 13977,
+        "url": "https://account.zentaku.or.jp/login?origin=https%3A%2F%2Fmember.zentaku.or.jp%2F&oid=Z00"
+      },
+      "errors": [],
+      "end_time": "2025-07-09T09:07:19.873306"
+    },
+    {
+      "test_name": "ログイン実行",
+      "start_time": "2025-07-09T09:07:19.873343",
+      "success": true,
+      "details": {
+        "login_url": "https://account.zentaku.or.jp/login?origin=https%3A%2F%2Fmember.zentaku.or.jp%2F&oid=Z00",
+        "hidden_fields": {
+          "origin": "https://member.zentaku.or.jp/",
+          "oid": "Z00",
+          "client_id": ""
+        },
+        "csrf_token_used": false,
+        "post_login_url": "https://member.zentaku.or.jp/?auth_nonce=ae79ade2-5c58-11f0-aaca-0e97abd2d8c1&auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3NfdG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKaFoyVnVkRjl5YjJ4bElqb2lJaXdpYVdGMElqb3hOelV5TURFNU5qUXdMQ0p0WVhOMFpYSWlPbVpoYkhObExDSnphV1FpT2lKSFVqZE5SVlJLUWxwUVRGZzNTVVZWVXpKUVNFcFlWbFZKVnpZeVJGWkJVVVpKTTFoR1UxbzNVa2hYTjBSTk5FRlZSRlJCSWl3aWRXbGtJam8wTmpVMWZRLnMtSG5BWjhxeHR1WFplZ19EeVR1WHYtZFc3Nmo0aHVFdnR6NDBjMDEtbGMiLCJhZ2VudF9yb2xlIjoiIiwiaWF0IjoxNzUyMDE5NjQwLCJrY2QiOiIwMDYiLCJraWQiOiIwMDY2MjQiLCJtYXN0ZXIiOmZhbHNlLCJvaWQiOlsiWjAwIiwiWjA2Il0sInJvbGUiOlsidGFra2VuIl0sInN1YiI6NDY1NX0.D99foleiaePHSemMndcOKonDiCni1mLO0JR0yo25ihA",
+        "response_code": 200,
+        "content_length": 22434,
+        "page_title": "ハトサポ利用規約同意確認 |「ハトサポ」宅建協会会員業務支援サイト | 全宅連",
+        "login_success": true,
+        "success_reason": "URL変化による判定",
+        "member_menu_detected": true,
+        "logout_function_detected": true,
+        "property_functions_detected": true,
+        "navigation_links": [
+          [
+            "https://www.zentaku.or.jp/",
+            "全宅連"
+          ],
+          [
+            "https://www.hosyo.or.jp/",
+            "全宅保証"
+          ],
+          [
+            "https://www.zentaku.or.jp/takken/",
+            "宅建協会"
+          ],
+          [
+            "https://chinkan.jp/",
+            "全宅管理"
+          ],
+          [
+            "https://www.zentaku.or.jp/products/",
+            "出版物のご案内"
+          ],
+          [
+            "https://www.zentaku.or.jp/about/realpartner/",
+            "不動産総合情報誌リアルパートナー"
+          ],
+          [
+            "https://www.zentaku.or.jp/about/career/",
+            "不動産キャリアパーソン"
+          ],
+          [
+            "https://www.zentaku.or.jp/access/",
+            "アクセスマップ"
+          ],
+          [
+            "https://www.zentaku.or.jp/about/disclosure/",
+            "ディスクロージャー"
+          ],
+          [
+            "https://www.zentaku.or.jp/sitemap/",
+            "サイトマップ"
+          ]
+        ],
+        "html_preview": "<!DOCTYPE html>\n<html lang=\"ja\">\n\n<head>\n        <meta charset=\"utf-8\">\n    <meta http-equiv=\"content-language\" content=\"ja\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\">\n    <script src=\"/content/static/js/common/viewport.js\"></script>\n        <!-- favicon -->\n    <link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"https://member.zentaku.or.jp/favicon.ico?20231213\">\n\n    <!-- SCRIPT -->\n    <script src=\"https://member.zentaku.or.jp//assets/docs/js/jquery-3.2.1.min.js\"></script>\n        <script src=\"https://member.zentaku.or.jp//js/lib/jquery-ui.js\"></script>\n\n    <script src=\"/library/jquery.easing-1.4.1/jquery.easing.js\"></script>\n    <script src=\"/library/GSAP-1.20.2/src/minified/TweenMax.min.js\"></script>\n    <script src=\"/content/static/js/assets/slick/slick.min.js\"></script>\n    <script src=\"/content/static/js/assets/magnific-popup/jquery.magnific-popup.min.js\"></script>\n    <script src=\"/content/static/js/assets/common.js?v=20240101\"></script>\n    <script src=\"/content/static/js/common/script.js?v=20240101\"></script>\n    <script src=\"/content/static/js/index/script.js?v=20240101\"></script>\n\n    <script>\n        $.widget.bridge(\"tlp\", $.ui.tooltip);\n\n        // fix conflicting bootstrap-datepicker and jquery-ui datepicker\n        $.fn.datepicker.noConflict = function(){\n            $.fn.datepicker = old;\n            return this;\n        };\n    </script>\n\n    <script src=\"https://member.zentaku.or.jp//assets/docs/js/popper.min.js\"></script>\n    <script src=\"https://member.zentaku.or.jp//assets/docs/js/bootstrap.min.js\"></script>\n    <script src=\"https://member.zentaku.or.jp//assets/docs/js/plugins/pace.min.js\"></script>\n\n    <!-- Enable Promise in IE browsers -->\n    <script type=\"text/javascript\">\n        var ua = window.navigator.userAgent.toLowerCase();\n        var msie = ua.indexOf(\"msie\");\n        var edge = ua."
+      },
+      "errors": [],
+      "end_time": "2025-07-09T09:07:20.410654"
+    },
+    {
+      "test_name": "セッション検証",
+      "start_time": "2025-07-09T09:07:20.410686",
+      "success": true,
+      "details": {
+        "final_url": "https://member.zentaku.or.jp/",
+        "content_length": 22434,
+        "session_valid": true,
+        "member_content_detected": true
+      },
+      "errors": [],
+      "end_time": "2025-07-09T09:07:20.649736"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "successful_tests": 3,
+    "success_rate": "100.0%",
+    "overall_success": true,
+    "login_successful": true
+  },
+  "end_time": "2025-07-09T09:07:20.649765"
+}

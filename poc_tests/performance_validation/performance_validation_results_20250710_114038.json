@@ -1,0 +1,885 @@
+{
+  "start_time": "2025-07-10T11:40:38.959454",
+  "tests": [
+    {
+      "test_name": "API パフォーマンス",
+      "start_time": "2025-07-10T11:40:38.959930",
+      "success": true,
+      "details": {
+        "response_times": {
+          "valid": true,
+          "endpoint_performance": {
+            "authentication": {
+              "endpoint": "/api/auth/login",
+              "target": "100ms",
+              "estimated": "80ms",
+              "factors": [
+                "JWT生成",
+                "データベースクエリ",
+                "セッション作成"
+              ]
+            },
+            "property_list": {
+              "endpoint": "/api/properties",
+              "target": "200ms",
+              "estimated": "150ms",
+              "factors": [
+                "データベースクエリ",
+                "権限フィルタ",
+                "JSONシリアライゼーション"
+              ]
+            },
+            "property_create": {
+              "endpoint": "/api/properties",
+              "target": "300ms",
+              "estimated": "250ms",
+              "factors": [
+                "バリデーション",
+                "データベース挿入",
+                "監査ログ"
+              ]
+            },
+            "property_search": {
+              "endpoint": "/api/properties/search",
+              "target": "400ms",
+              "estimated": "350ms",
+              "factors": [
+                "Elasticsearch クエリ",
+                "地理検索",
+                "結果集約"
+              ]
+            },
+            "file_upload": {
+              "endpoint": "/api/upload",
+              "target": "2000ms",
+              "estimated": "1500ms",
+              "factors": [
+                "ファイル処理",
+                "S3アップロード",
+                "OCR処理"
+              ]
+            }
+          },
+          "optimization_strategies": {
+            "database_optimization": {
+              "connection_pooling": "pgBouncer",
+              "query_optimization": "インデックス最適化",
+              "read_replicas": "読み取り負荷分散",
+              "caching": "Redis キャッシュ"
+            },
+            "application_optimization": {
+              "async_processing": "非同期処理",
+              "code_splitting": "遅延ロード",
+              "compression": "gzip/brotli",
+              "cdn": "CloudFront"
+            },
+            "infrastructure_optimization": {
+              "auto_scaling": "水平スケーリング",
+              "load_balancing": "ALB",
+              "instance_optimization": "適切なインスタンス選択",
+              "region_placement": "地理的最適化"
+            }
+          },
+          "benchmark_simulation": {
+            "test_scenarios": [
+              {
+                "name": "軽量API（認証）",
+                "concurrent_users": 100,
+                "requests_per_second": 50,
+                "expected_response_time": "80ms",
+                "success_rate": "99.9%"
+              },
+              {
+                "name": "中程度API（物件一覧）",
+                "concurrent_users": 200,
+                "requests_per_second": 100,
+                "expected_response_time": "150ms",
+                "success_rate": "99.5%"
+              },
+              {
+                "name": "重いAPI（検索）",
+                "concurrent_users": 50,
+                "requests_per_second": 25,
+                "expected_response_time": "350ms",
+                "success_rate": "99%"
+              }
+            ],
+            "performance_targets": {
+              "p50": "< 200ms",
+              "p95": "< 500ms",
+              "p99": "< 1000ms",
+              "error_rate": "< 0.1%"
+            }
+          },
+          "performance_monitoring": {
+            "apm_tool": "New Relic",
+            "metrics": [
+              "response_time",
+              "throughput",
+              "error_rate",
+              "apdex"
+            ],
+            "alerting": "閾値ベースアラート",
+            "dashboard": "リアルタイム監視"
+          },
+          "bottleneck_analysis": {
+            "database": "クエリ最適化・インデックス追加",
+            "network": "CDN・圧縮・キープアライブ",
+            "cpu": "非同期処理・キャッシュ",
+            "memory": "オブジェクト最適化・ガベージコレクション"
+          }
+        },
+        "throughput": {
+          "valid": true,
+          "system_throughput": {
+            "api_server": {
+              "max_rps": 1000,
+              "concurrent_connections": 5000,
+              "instance_count": 3,
+              "scaling_strategy": "horizontal"
+            },
+            "database": {
+              "max_connections": 200,
+              "max_queries_per_second": 2000,
+              "read_replicas": 2,
+              "connection_pooling": true
+            },
+            "cache_layer": {
+              "redis_ops_per_second": 100000,
+              "cache_hit_ratio": "90%",
+              "memory_allocation": "8GB",
+              "clustering": true
+            },
+            "file_storage": {
+              "s3_requests_per_second": 3500,
+              "upload_bandwidth": "10 Gbps",
+              "download_bandwidth": "50 Gbps",
+              "cdn_cache_ratio": "85%"
+            }
+          },
+          "load_balancing": {
+            "application_load_balancer": {
+              "algorithm": "round_robin",
+              "health_checks": "HTTP /health",
+              "sticky_sessions": false,
+              "ssl_termination": true
+            },
+            "database_load_balancing": {
+              "read_write_split": true,
+              "read_replicas": [
+                "primary",
+                "replica1",
+                "replica2"
+              ],
+              "failover": "automatic",
+              "lag_monitoring": true
+            },
+            "cdn_distribution": {
+              "edge_locations": "global",
+              "cache_behaviors": "path-based",
+              "origin_shield": true,
+              "compression": "gzip/brotli"
+            }
+          },
+          "capacity_planning": {
+            "current_baseline": {
+              "users": 1000,
+              "requests_per_day": 100000,
+              "data_volume": "10GB",
+              "peak_factor": "3x"
+            },
+            "growth_projections": {
+              "year_1": {
+                "users": 5000,
+                "requests_per_day": 500000,
+                "data_volume": "100GB"
+              },
+              "year_2": {
+                "users": 25000,
+                "requests_per_day": 2500000,
+                "data_volume": "1TB"
+              },
+              "year_3": {
+                "users": 100000,
+                "requests_per_day": 10000000,
+                "data_volume": "10TB"
+              }
+            },
+            "scaling_triggers": {
+              "cpu_utilization": "70%",
+              "memory_utilization": "80%",
+              "response_time": "500ms",
+              "error_rate": "1%"
+            }
+          },
+          "performance_benchmarks": {
+            "api_throughput": "1000 RPS",
+            "database_throughput": "2000 QPS",
+            "cache_throughput": "100000 OPS",
+            "storage_throughput": "10 Gbps"
+          },
+          "scalability_limits": {
+            "horizontal_scaling": "無制限（コスト制約のみ）",
+            "vertical_scaling": "インスタンスタイプ制限",
+            "database_scaling": "読み取り複製による",
+            "storage_scaling": "S3による無制限"
+          }
+        },
+        "load_testing": {
+          "valid": true,
+          "load_test_scenarios": {
+            "baseline_test": {
+              "description": "正常時の性能測定",
+              "users": 100,
+              "duration": "10 minutes",
+              "ramp_up": "2 minutes",
+              "expected_response_time": "< 200ms"
+            },
+            "stress_test": {
+              "description": "限界性能の測定",
+              "users": 1000,
+              "duration": "30 minutes",
+              "ramp_up": "10 minutes",
+              "expected_response_time": "< 500ms"
+            },
+            "spike_test": {
+              "description": "急激な負荷増加",
+              "users": "100 → 1000 → 100",
+              "duration": "20 minutes",
+              "ramp_up": "1 minute",
+              "expected_recovery": "< 5 minutes"
+            },
+            "volume_test": {
+              "description": "大量データ処理",
+              "users": 200,
+              "duration": "2 hours",
+              "data_volume": "1GB",
+              "expected_degradation": "< 10%"
+            },
+            "endurance_test": {
+              "description": "長時間安定性",
+              "users": 300,
+              "duration": "24 hours",
+              "expected_memory_leak": "なし",
+              "expected_performance_degradation": "< 5%"
+            }
+          },
+          "load_testing_tools": {
+            "k6": {
+              "type": "JavaScript-based",
+              "pros": [
+                "軽量",
+                "CI/CD統合",
+                "クラウドネイティブ"
+              ],
+              "scenarios": [
+                "API負荷テスト",
+                "WebSocket",
+                "gRPC"
+              ],
+              "reporting": "Grafana連携"
+            },
+            "artillery": {
+              "type": "Node.js-based",
+              "pros": [
+                "WebSocket対応",
+                "プラグイン豊富"
+              ],
+              "scenarios": [
+                "リアルタイム機能",
+                "複雑シナリオ"
+              ],
+              "reporting": "HTML/JSON"
+            },
+            "jmeter": {
+              "type": "Java-based",
+              "pros": [
+                "GUI",
+                "豊富な機能",
+                "レポート"
+              ],
+              "scenarios": [
+                "複雑なテストプラン",
+                "プロトコル多様"
+              ],
+              "reporting": "詳細レポート"
+            }
+          },
+          "performance_metrics": {
+            "response_time_metrics": {
+              "average_response_time": "平均応答時間",
+              "median_response_time": "中央値",
+              "p95_response_time": "95パーセンタイル",
+              "p99_response_time": "99パーセンタイル",
+              "max_response_time": "最大応答時間"
+            },
+            "throughput_metrics": {
+              "requests_per_second": "秒間リクエスト数",
+              "transactions_per_second": "秒間トランザクション数",
+              "data_transfer_rate": "データ転送レート",
+              "concurrent_users": "同時ユーザー数"
+            },
+            "resource_metrics": {
+              "cpu_utilization": "CPU使用率",
+              "memory_utilization": "メモリ使用率",
+              "disk_io": "ディスクI/O",
+              "network_io": "ネットワークI/O"
+            },
+            "error_metrics": {
+              "error_rate": "エラー率",
+              "timeout_rate": "タイムアウト率",
+              "http_error_codes": "HTTPエラーコード分布",
+              "application_errors": "アプリケーションエラー"
+            }
+          },
+          "load_test_implementation": {
+            "k6_script_example": "\n// k6負荷テストスクリプト\nimport http from 'k6/http';\nimport { check, sleep } from 'k6';\n\nexport let options = {\n  scenarios: {\n    baseline: {\n      executor: 'ramping-vus',\n      startVUs: 0,\n      stages: [\n        { duration: '2m', target: 100 },\n        { duration: '10m', target: 100 },\n        { duration: '2m', target: 0 },\n      ],\n    },\n  },\n  thresholds: {\n    http_req_duration: ['p(95)<500'],\n    http_req_failed: ['rate<0.01'],\n  },\n};\n\nexport default function () {\n  const response = http.get('https://api.realestate-dx.com/properties');\n  check(response, {\n    'status is 200': (r) => r.status === 200,\n    'response time < 500ms': (r) => r.timings.duration < 500,\n  });\n  sleep(1);\n}\n",
+            "monitoring_integration": {
+              "prometheus": "メトリクス収集",
+              "grafana": "ダッシュボード",
+              "alertmanager": "アラート",
+              "jaeger": "分散トレーシング"
+            }
+          },
+          "continuous_testing": {
+            "ci_cd_integration": "GitHub Actions",
+            "scheduled_tests": "夜間実行",
+            "performance_regression": "自動検出",
+            "report_distribution": "Slack通知"
+          },
+          "performance_budgets": {
+            "api_response_time": "< 500ms (p95)",
+            "page_load_time": "< 3s",
+            "time_to_interactive": "< 5s",
+            "error_rate": "< 0.1%"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:40:38.959985"
+    },
+    {
+      "test_name": "データベース スケーラビリティ",
+      "start_time": "2025-07-10T11:40:38.959989",
+      "success": true,
+      "details": {
+        "read_scaling": {
+          "valid": true,
+          "read_replica_strategy": {
+            "primary_database": {
+              "role": "読み書き",
+              "instance_type": "db.r6g.xlarge",
+              "connections": 200,
+              "write_iops": 10000
+            },
+            "read_replicas": [
+              {
+                "name": "replica-1",
+                "role": "読み取り専用",
+                "instance_type": "db.r6g.large",
+                "connections": 200,
+                "read_iops": 15000,
+                "lag_tolerance": "< 1 second"
+              },
+              {
+                "name": "replica-2",
+                "role": "読み取り専用",
+                "instance_type": "db.r6g.large",
+                "connections": 200,
+                "read_iops": 15000,
+                "lag_tolerance": "< 1 second"
+              }
+            ],
+            "total_read_capacity": "30000 IOPS",
+            "auto_scaling": true
+          },
+          "read_load_balancing": {
+            "connection_routing": {
+              "write_queries": "primary",
+              "read_queries": "replicas",
+              "analytical_queries": "dedicated_replica",
+              "routing_logic": "application_level"
+            },
+            "pgbouncer_config": {
+              "pool_mode": "transaction",
+              "max_client_conn": 1000,
+              "default_pool_size": 50,
+              "reserve_pool_size": 10
+            },
+            "application_config": {
+              "read_preference": "secondary_preferred",
+              "max_staleness": "1 second",
+              "fallback_to_primary": true,
+              "connection_timeout": "5 seconds"
+            }
+          },
+          "caching_strategy": {
+            "redis_cluster": {
+              "nodes": 6,
+              "memory_per_node": "8GB",
+              "total_memory": "48GB",
+              "replication_factor": 2
+            },
+            "cache_patterns": {
+              "query_result_cache": "SELECT結果キャッシュ",
+              "object_cache": "ORM オブジェクトキャッシュ",
+              "session_cache": "セッションデータ",
+              "computed_values": "計算済み値"
+            },
+            "cache_policies": {
+              "ttl": "1 hour",
+              "eviction": "LRU",
+              "compression": true,
+              "serialization": "JSON"
+            }
+          },
+          "performance_targets": {
+            "read_queries_per_second": 2000,
+            "cache_hit_ratio": "90%",
+            "replication_lag": "< 1 second",
+            "failover_time": "< 30 seconds"
+          },
+          "monitoring": {
+            "replication_lag": "CloudWatch",
+            "query_performance": "pg_stat_statements",
+            "cache_metrics": "Redis info",
+            "connection_pooling": "pgBouncer stats"
+          }
+        },
+        "write_scaling": {
+          "valid": true,
+          "write_optimization": {
+            "batch_processing": {
+              "bulk_inserts": "複数レコード一括挿入",
+              "batch_size": 1000,
+              "batch_timeout": "5 seconds",
+              "error_handling": "部分失敗許容"
+            },
+            "async_processing": {
+              "background_jobs": "非同期処理",
+              "queue_system": "Redis Bull",
+              "retry_mechanism": "指数バックオフ",
+              "dead_letter_queue": "失敗メッセージ保管"
+            },
+            "connection_optimization": {
+              "prepared_statements": "プリペアドステートメント",
+              "connection_reuse": "接続プール",
+              "transaction_batching": "トランザクション最適化",
+              "write_ahead_log": "WAL最適化"
+            }
+          },
+          "vertical_scaling": {
+            "instance_scaling": {
+              "current": "db.r6g.xlarge",
+              "scale_up_options": [
+                "db.r6g.2xlarge",
+                "db.r6g.4xlarge",
+                "db.r6g.8xlarge",
+                "db.r6g.16xlarge"
+              ],
+              "max_capacity": "512 vCPUs, 4TB RAM",
+              "scaling_trigger": "CPU > 80%"
+            },
+            "storage_scaling": {
+              "storage_type": "gp3",
+              "current_size": "100GB",
+              "max_size": "64TB",
+              "iops_scaling": "3000 → 16000",
+              "throughput_scaling": "125MB/s → 1000MB/s"
+            }
+          },
+          "write_distribution": {
+            "functional_partitioning": {
+              "user_data": "primary",
+              "audit_logs": "separate_db",
+              "file_metadata": "separate_db",
+              "analytics_data": "data_warehouse"
+            },
+            "temporal_partitioning": {
+              "current_data": "hot_storage",
+              "historical_data": "warm_storage",
+              "archived_data": "cold_storage",
+              "partition_strategy": "monthly"
+            },
+            "geographic_distribution": {
+              "primary_region": "ap-northeast-1",
+              "backup_region": "ap-southeast-1",
+              "cross_region_replication": true,
+              "disaster_recovery": "automated"
+            }
+          },
+          "performance_targets": {
+            "write_queries_per_second": 1000,
+            "batch_insert_performance": "10000 records/second",
+            "transaction_throughput": "500 TPS",
+            "lock_contention": "< 5%"
+          },
+          "bottleneck_mitigation": {
+            "lock_optimization": "行レベルロック",
+            "deadlock_prevention": "一貫した順序",
+            "hot_spot_avoidance": "UUID主キー",
+            "maintenance_optimization": "オフピーク実行"
+          }
+        },
+        "partitioning": {
+          "valid": true,
+          "table_partitioning": {
+            "properties_table": {
+              "partition_type": "range",
+              "partition_key": "created_at",
+              "partition_interval": "monthly",
+              "retention_policy": "7 years",
+              "partition_pruning": true
+            },
+            "audit_logs_table": {
+              "partition_type": "range",
+              "partition_key": "timestamp",
+              "partition_interval": "weekly",
+              "retention_policy": "10 years",
+              "compression": "zstd"
+            },
+            "user_activities_table": {
+              "partition_type": "hash",
+              "partition_key": "user_id",
+              "partition_count": 16,
+              "distribution": "even",
+              "cross_partition_queries": "minimal"
+            }
+          },
+          "sharding_strategy": {
+            "tenant_sharding": {
+              "shard_key": "tenant_id",
+              "shard_count": 4,
+              "shard_distribution": "consistent_hashing",
+              "rebalancing": "automated"
+            },
+            "geographic_sharding": {
+              "regions": [
+                "ap-northeast-1",
+                "us-east-1",
+                "eu-west-1"
+              ],
+              "data_residency": "GDPR準拠",
+              "cross_region_queries": "federation",
+              "latency_optimization": true
+            },
+            "functional_sharding": {
+              "user_service": "separate_db",
+              "property_service": "separate_db",
+              "document_service": "separate_db",
+              "analytics_service": "data_warehouse"
+            }
+          },
+          "data_archival": {
+            "archival_policies": {
+              "active_data": "0-2 years",
+              "warm_data": "2-5 years",
+              "cold_data": "5+ years",
+              "deletion_schedule": "automated"
+            },
+            "archival_storage": {
+              "warm_storage": "S3 Intelligent-Tiering",
+              "cold_storage": "S3 Glacier",
+              "deep_archive": "S3 Glacier Deep Archive",
+              "retrieval_sla": "tier-based"
+            },
+            "archival_automation": {
+              "lifecycle_policies": "S3 Lifecycle",
+              "database_triggers": "age-based",
+              "restore_process": "on-demand",
+              "cost_optimization": "storage_class_analysis"
+            }
+          },
+          "implementation_complexity": {
+            "partition_maintenance": "automated",
+            "query_routing": "application_aware",
+            "backup_strategy": "partition_level",
+            "monitoring": "per_partition_metrics"
+          },
+          "performance_benefits": {
+            "query_performance": "partition_pruning",
+            "maintenance_operations": "parallel_execution",
+            "backup_restore": "incremental",
+            "storage_optimization": "compression"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:40:38.960007"
+    },
+    {
+      "test_name": "自動スケーリング",
+      "start_time": "2025-07-10T11:40:38.960009",
+      "success": true,
+      "details": {
+        "horizontal_scaling": {
+          "valid": true,
+          "application_scaling": {
+            "ecs_service": {
+              "min_capacity": 2,
+              "max_capacity": 50,
+              "desired_capacity": 5,
+              "scaling_policy": "target_tracking"
+            },
+            "scaling_triggers": {
+              "cpu_utilization": "70%",
+              "memory_utilization": "80%",
+              "request_count": "1000 RPM",
+              "response_time": "500ms"
+            },
+            "scaling_behavior": {
+              "scale_out_cooldown": "2 minutes",
+              "scale_in_cooldown": "5 minutes",
+              "scale_out_step": "100%",
+              "scale_in_step": "10%"
+            }
+          },
+          "load_balancer_config": {
+            "application_load_balancer": {
+              "type": "ALB",
+              "scheme": "internet-facing",
+              "health_check": "/health",
+              "health_check_interval": "30 seconds"
+            },
+            "target_groups": {
+              "web_servers": {
+                "protocol": "HTTP",
+                "port": 3000,
+                "health_check_path": "/api/health",
+                "deregistration_delay": "30 seconds"
+              },
+              "api_servers": {
+                "protocol": "HTTP",
+                "port": 8000,
+                "health_check_path": "/health",
+                "deregistration_delay": "60 seconds"
+              }
+            },
+            "routing_rules": {
+              "api_traffic": "/api/*",
+              "web_traffic": "/*",
+              "static_assets": "/static/*"
+            }
+          },
+          "microservice_scaling": {
+            "auth_service": {
+              "min_instances": 2,
+              "max_instances": 10,
+              "cpu_threshold": "60%",
+              "memory_threshold": "70%"
+            },
+            "property_service": {
+              "min_instances": 3,
+              "max_instances": 20,
+              "cpu_threshold": "70%",
+              "memory_threshold": "80%"
+            },
+            "file_service": {
+              "min_instances": 2,
+              "max_instances": 15,
+              "cpu_threshold": "80%",
+              "memory_threshold": "85%"
+            },
+            "notification_service": {
+              "min_instances": 1,
+              "max_instances": 5,
+              "queue_depth": 1000,
+              "processing_rate": "100 msg/min"
+            }
+          },
+          "scaling_automation": {
+            "cloudwatch_alarms": "メトリクスベース",
+            "auto_scaling_groups": "EC2/ECS",
+            "lambda_scaling": "concurrent_executions",
+            "api_gateway_scaling": "automatic"
+          },
+          "cost_optimization": {
+            "scheduled_scaling": "営業時間外削減",
+            "spot_instances": "非本番環境",
+            "reserved_instances": "ベースライン",
+            "cost_monitoring": "リアルタイム"
+          }
+        },
+        "vertical_scaling": {
+          "valid": true,
+          "instance_scaling": {
+            "web_tier": {
+              "current": "t3.medium",
+              "scale_options": [
+                "t3.large",
+                "t3.xlarge",
+                "t3.2xlarge"
+              ],
+              "max_capacity": "t3.2xlarge",
+              "scaling_trigger": "CPU > 80%"
+            },
+            "api_tier": {
+              "current": "c5.large",
+              "scale_options": [
+                "c5.xlarge",
+                "c5.2xlarge",
+                "c5.4xlarge"
+              ],
+              "max_capacity": "c5.4xlarge",
+              "scaling_trigger": "CPU > 75%"
+            },
+            "database_tier": {
+              "current": "db.r6g.xlarge",
+              "scale_options": [
+                "db.r6g.2xlarge",
+                "db.r6g.4xlarge"
+              ],
+              "max_capacity": "db.r6g.16xlarge",
+              "scaling_trigger": "CPU > 70%"
+            }
+          },
+          "memory_optimization": {
+            "application_memory": {
+              "node_js_heap": "2GB → 8GB",
+              "garbage_collection": "optimization",
+              "memory_leak_detection": "monitoring",
+              "heap_dump_analysis": "automated"
+            },
+            "database_memory": {
+              "shared_buffers": "25% of RAM",
+              "work_mem": "dynamic allocation",
+              "maintenance_work_mem": "1GB",
+              "effective_cache_size": "75% of RAM"
+            },
+            "cache_memory": {
+              "redis_memory": "8GB → 32GB",
+              "cache_eviction": "LRU policy",
+              "memory_fragmentation": "monitoring",
+              "memory_efficiency": "optimization"
+            }
+          },
+          "storage_scaling": {
+            "ebs_volumes": {
+              "volume_type": "gp3",
+              "size_scaling": "100GB → 16TB",
+              "iops_scaling": "3000 → 16000",
+              "throughput_scaling": "125MB/s → 1000MB/s"
+            },
+            "s3_storage": {
+              "storage_classes": "Standard → IA → Glacier",
+              "lifecycle_policies": "automated transition",
+              "cross_region_replication": "disaster recovery",
+              "versioning": "enabled"
+            },
+            "backup_storage": {
+              "snapshot_frequency": "daily",
+              "retention_period": "30 days",
+              "cross_region_backup": "enabled",
+              "encryption": "AES-256"
+            }
+          },
+          "scaling_automation": {
+            "cloudwatch_metrics": "detailed monitoring",
+            "auto_scaling_policies": "step scaling",
+            "notification": "SNS alerts",
+            "rollback": "automatic"
+          },
+          "performance_impact": {
+            "scaling_time": "5-10 minutes",
+            "downtime": "minimal (load balancer)",
+            "data_migration": "not required",
+            "application_restart": "required"
+          }
+        },
+        "container_orchestration": {
+          "valid": true,
+          "ecs_configuration": {
+            "cluster_setup": {
+              "cluster_type": "EC2",
+              "instance_types": [
+                "c5.large",
+                "c5.xlarge"
+              ],
+              "auto_scaling_group": "2-20 instances",
+              "capacity_providers": [
+                "EC2",
+                "FARGATE"
+              ]
+            },
+            "service_definition": {
+              "task_definition": "containerized_app",
+              "desired_count": 5,
+              "deployment_type": "rolling_update",
+              "health_check_grace_period": "60 seconds"
+            },
+            "task_auto_scaling": {
+              "min_capacity": 2,
+              "max_capacity": 50,
+              "target_cpu": "70%",
+              "target_memory": "80%"
+            }
+          },
+          "docker_optimization": {
+            "image_optimization": {
+              "base_image": "node:18-alpine",
+              "multi_stage_build": true,
+              "layer_caching": true,
+              "image_size": "< 500MB"
+            },
+            "container_resources": {
+              "cpu_limit": "1 vCPU",
+              "memory_limit": "2GB",
+              "memory_reservation": "1GB",
+              "ulimits": "optimized"
+            },
+            "security_hardening": {
+              "non_root_user": true,
+              "read_only_filesystem": true,
+              "security_scanning": "ECR native",
+              "secrets_management": "AWS Secrets Manager"
+            }
+          },
+          "service_mesh": {
+            "istio_configuration": {
+              "traffic_management": "intelligent routing",
+              "security": "mTLS",
+              "observability": "distributed tracing",
+              "policy_enforcement": "rate limiting"
+            },
+            "envoy_proxy": {
+              "load_balancing": "round_robin",
+              "circuit_breaker": "enabled",
+              "retry_policy": "exponential backoff",
+              "timeout_configuration": "per_service"
+            },
+            "monitoring_integration": {
+              "prometheus": "metrics collection",
+              "jaeger": "distributed tracing",
+              "grafana": "visualization",
+              "kiali": "service mesh dashboard"
+            }
+          },
+          "deployment_strategies": {
+            "blue_green": "zero downtime",
+            "canary": "gradual rollout",
+            "rolling_update": "default strategy",
+            "feature_flags": "controlled release"
+          },
+          "observability": {
+            "container_insights": "AWS CloudWatch",
+            "application_monitoring": "APM tools",
+            "log_aggregation": "CloudWatch Logs",
+            "distributed_tracing": "X-Ray"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:40:38.960023"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "successful_tests": 3,
+    "success_rate": "100.0%",
+    "overall_success": true
+  },
+  "end_time": "2025-07-10T11:40:38.960067"
+}

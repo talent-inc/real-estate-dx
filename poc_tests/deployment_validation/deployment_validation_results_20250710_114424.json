@@ -1,0 +1,1109 @@
+{
+  "start_time": "2025-07-10T11:44:24.374227",
+  "tests": [
+    {
+      "test_name": "AWS インフラ",
+      "start_time": "2025-07-10T11:44:24.374293",
+      "success": true,
+      "details": {
+        "vpc_network": {
+          "valid": true,
+          "vpc_design": {
+            "primary_vpc": {
+              "cidr_block": "10.0.0.0/16",
+              "region": "ap-northeast-1",
+              "availability_zones": [
+                "ap-northeast-1a",
+                "ap-northeast-1c",
+                "ap-northeast-1d"
+              ],
+              "dns_hostnames": true,
+              "dns_resolution": true
+            },
+            "subnet_design": {
+              "public_subnets": [
+                {
+                  "cidr": "10.0.1.0/24",
+                  "az": "ap-northeast-1a",
+                  "purpose": "ALB"
+                },
+                {
+                  "cidr": "10.0.2.0/24",
+                  "az": "ap-northeast-1c",
+                  "purpose": "ALB"
+                },
+                {
+                  "cidr": "10.0.3.0/24",
+                  "az": "ap-northeast-1d",
+                  "purpose": "ALB"
+                }
+              ],
+              "private_subnets": [
+                {
+                  "cidr": "10.0.11.0/24",
+                  "az": "ap-northeast-1a",
+                  "purpose": "App"
+                },
+                {
+                  "cidr": "10.0.12.0/24",
+                  "az": "ap-northeast-1c",
+                  "purpose": "App"
+                },
+                {
+                  "cidr": "10.0.13.0/24",
+                  "az": "ap-northeast-1d",
+                  "purpose": "App"
+                }
+              ],
+              "database_subnets": [
+                {
+                  "cidr": "10.0.21.0/24",
+                  "az": "ap-northeast-1a",
+                  "purpose": "RDS"
+                },
+                {
+                  "cidr": "10.0.22.0/24",
+                  "az": "ap-northeast-1c",
+                  "purpose": "RDS"
+                },
+                {
+                  "cidr": "10.0.23.0/24",
+                  "az": "ap-northeast-1d",
+                  "purpose": "RDS"
+                }
+              ]
+            },
+            "route_tables": {
+              "public_rt": "0.0.0.0/0 → IGW",
+              "private_rt": "0.0.0.0/0 → NAT Gateway",
+              "database_rt": "local only"
+            }
+          },
+          "security_groups": {
+            "alb_sg": {
+              "ingress": [
+                {
+                  "port": 80,
+                  "source": "0.0.0.0/0",
+                  "protocol": "HTTP"
+                },
+                {
+                  "port": 443,
+                  "source": "0.0.0.0/0",
+                  "protocol": "HTTPS"
+                }
+              ],
+              "egress": [
+                {
+                  "port": "all",
+                  "destination": "10.0.0.0/16"
+                }
+              ]
+            },
+            "app_sg": {
+              "ingress": [
+                {
+                  "port": 3000,
+                  "source": "alb_sg",
+                  "protocol": "HTTP"
+                },
+                {
+                  "port": 8000,
+                  "source": "alb_sg",
+                  "protocol": "HTTP"
+                }
+              ],
+              "egress": [
+                {
+                  "port": 443,
+                  "destination": "0.0.0.0/0",
+                  "protocol": "HTTPS"
+                },
+                {
+                  "port": 5432,
+                  "destination": "database_sg",
+                  "protocol": "PostgreSQL"
+                }
+              ]
+            },
+            "database_sg": {
+              "ingress": [
+                {
+                  "port": 5432,
+                  "source": "app_sg",
+                  "protocol": "PostgreSQL"
+                }
+              ],
+              "egress": []
+            }
+          },
+          "network_connectivity": {
+            "internet_gateway": {
+              "purpose": "インターネット接続",
+              "attached_to": "public_subnets"
+            },
+            "nat_gateway": {
+              "count": 3,
+              "placement": "public_subnets",
+              "elastic_ips": 3,
+              "purpose": "アウトバウンド接続"
+            },
+            "vpc_endpoints": [
+              {
+                "service": "S3",
+                "type": "Gateway"
+              },
+              {
+                "service": "DynamoDB",
+                "type": "Gateway"
+              },
+              {
+                "service": "ECR",
+                "type": "Interface"
+              },
+              {
+                "service": "Secrets Manager",
+                "type": "Interface"
+              }
+            ]
+          },
+          "network_security": {
+            "nacls": "デフォルト設定",
+            "flow_logs": "VPC Flow Logs有効",
+            "ddos_protection": "AWS Shield Standard",
+            "waf": "CloudFlare + AWS WAF"
+          },
+          "cost_optimization": {
+            "nat_gateway_cost": "月額$135 (3台)",
+            "vpc_endpoint_savings": "データ転送料削減",
+            "elastic_ip_cost": "月額$10.95 (3個)",
+            "total_network_cost": "月額約$150"
+          }
+        },
+        "compute_resources": {
+          "valid": true,
+          "ecs_cluster": {
+            "cluster_configuration": {
+              "cluster_name": "realestate-dx-cluster",
+              "capacity_providers": [
+                "EC2",
+                "FARGATE"
+              ],
+              "default_capacity_provider": "EC2",
+              "fargate_spot": true
+            },
+            "ec2_instances": {
+              "instance_types": [
+                "c5.large",
+                "c5.xlarge"
+              ],
+              "auto_scaling_group": {
+                "min_size": 2,
+                "max_size": 20,
+                "desired_capacity": 5
+              },
+              "user_data": "ECS agent installation",
+              "ami": "Amazon Linux 2 ECS-optimized"
+            },
+            "fargate_tasks": {
+              "use_cases": [
+                "バッチ処理",
+                "一時的ワークロード"
+              ],
+              "cpu_memory": "0.25-4 vCPU, 0.5-30 GB",
+              "networking": "awsvpc mode",
+              "ephemeral_storage": "20-200 GB"
+            }
+          },
+          "application_services": {
+            "web_service": {
+              "task_definition": "web-app",
+              "desired_count": 3,
+              "cpu": 512,
+              "memory": 1024,
+              "port_mappings": [
+                3000
+              ],
+              "health_check": "/health"
+            },
+            "api_service": {
+              "task_definition": "api-server",
+              "desired_count": 5,
+              "cpu": 1024,
+              "memory": 2048,
+              "port_mappings": [
+                8000
+              ],
+              "health_check": "/api/health"
+            },
+            "worker_service": {
+              "task_definition": "background-worker",
+              "desired_count": 2,
+              "cpu": 512,
+              "memory": 1024,
+              "port_mappings": [],
+              "environment": "production"
+            }
+          },
+          "load_balancer": {
+            "application_load_balancer": {
+              "scheme": "internet-facing",
+              "ip_address_type": "ipv4",
+              "subnets": "public_subnets",
+              "security_groups": [
+                "alb_sg"
+              ]
+            },
+            "target_groups": [
+              {
+                "name": "web-tg",
+                "port": 3000,
+                "protocol": "HTTP",
+                "health_check_path": "/health",
+                "targets": "web_service"
+              },
+              {
+                "name": "api-tg",
+                "port": 8000,
+                "protocol": "HTTP",
+                "health_check_path": "/api/health",
+                "targets": "api_service"
+              }
+            ],
+            "listeners": [
+              {
+                "port": 80,
+                "protocol": "HTTP",
+                "action": "redirect to HTTPS"
+              },
+              {
+                "port": 443,
+                "protocol": "HTTPS",
+                "ssl_policy": "ELBSecurityPolicy-TLS-1-2-2017-01",
+                "certificate": "ACM certificate"
+              }
+            ]
+          },
+          "auto_scaling": {
+            "cluster_auto_scaling": "capacity providers",
+            "service_auto_scaling": "target tracking",
+            "instance_auto_scaling": "CloudWatch metrics",
+            "scaling_policies": "step scaling"
+          },
+          "cost_estimation": {
+            "ec2_instances": "月額$300-1200 (2-20台)",
+            "fargate_tasks": "月額$100-500 (使用量による)",
+            "load_balancer": "月額$20-30",
+            "total_compute_cost": "月額$420-1730"
+          }
+        },
+        "data_storage": {
+          "valid": true,
+          "rds_database": {
+            "primary_database": {
+              "engine": "PostgreSQL 14",
+              "instance_class": "db.r6g.xlarge",
+              "allocated_storage": 100,
+              "max_allocated_storage": 1000,
+              "storage_type": "gp3",
+              "multi_az": true,
+              "backup_retention": 30,
+              "backup_window": "03:00-04:00 UTC",
+              "maintenance_window": "sun:04:00-sun:05:00 UTC"
+            },
+            "read_replicas": [
+              {
+                "instance_class": "db.r6g.large",
+                "availability_zone": "ap-northeast-1c",
+                "publicly_accessible": false
+              },
+              {
+                "instance_class": "db.r6g.large",
+                "availability_zone": "ap-northeast-1d",
+                "publicly_accessible": false
+              }
+            ],
+            "parameter_group": {
+              "shared_buffers": "25% of RAM",
+              "work_mem": "4MB",
+              "maintenance_work_mem": "512MB",
+              "effective_cache_size": "75% of RAM",
+              "log_statement": "all"
+            }
+          },
+          "s3_storage": {
+            "application_bucket": {
+              "bucket_name": "realestate-dx-app",
+              "versioning": "enabled",
+              "encryption": "SSE-S3",
+              "public_access": "blocked",
+              "lifecycle_policy": "transition to IA after 30 days"
+            },
+            "backup_bucket": {
+              "bucket_name": "realestate-dx-backup",
+              "versioning": "enabled",
+              "encryption": "SSE-KMS",
+              "cross_region_replication": "enabled",
+              "lifecycle_policy": "transition to Glacier after 90 days"
+            },
+            "static_assets": {
+              "bucket_name": "realestate-dx-static",
+              "versioning": "disabled",
+              "encryption": "SSE-S3",
+              "cloudfront_distribution": "enabled",
+              "cache_policy": "CachingOptimized"
+            }
+          },
+          "elasticache_redis": {
+            "cluster_configuration": {
+              "engine": "Redis 7.0",
+              "node_type": "cache.r6g.large",
+              "num_cache_nodes": 3,
+              "parameter_group": "default.redis7",
+              "port": 6379
+            },
+            "replication_group": {
+              "replication_group_id": "realestate-dx-redis",
+              "num_cache_clusters": 3,
+              "automatic_failover": true,
+              "multi_az": true,
+              "snapshot_retention_limit": 7,
+              "snapshot_window": "05:00-06:00 UTC"
+            },
+            "security": {
+              "subnet_group": "cache-subnet-group",
+              "security_groups": [
+                "cache_sg"
+              ],
+              "auth_token": "enabled",
+              "transit_encryption": true,
+              "at_rest_encryption": true
+            }
+          },
+          "backup_strategy": {
+            "rds_automated_backup": "30日間保持",
+            "rds_manual_snapshots": "重要マイルストーン",
+            "s3_versioning": "誤削除対策",
+            "cross_region_backup": "災害復旧"
+          },
+          "cost_estimation": {
+            "rds_primary": "月額$400-600",
+            "rds_replicas": "月額$200-400",
+            "s3_storage": "月額$50-200",
+            "elasticache": "月額$200-300",
+            "total_storage_cost": "月額$850-1500"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:44:24.374309"
+    },
+    {
+      "test_name": "IaC デプロイメント",
+      "start_time": "2025-07-10T11:44:24.374311",
+      "success": true,
+      "details": {
+        "terraform": {
+          "valid": true,
+          "terraform_structure": {
+            "modules": [
+              {
+                "name": "vpc",
+                "purpose": "VPC・ネットワーク",
+                "resources": [
+                  "aws_vpc",
+                  "aws_subnet",
+                  "aws_route_table"
+                ],
+                "variables": [
+                  "vpc_cidr",
+                  "availability_zones",
+                  "environment"
+                ]
+              },
+              {
+                "name": "security",
+                "purpose": "セキュリティグループ・NACL",
+                "resources": [
+                  "aws_security_group",
+                  "aws_network_acl"
+                ],
+                "variables": [
+                  "vpc_id",
+                  "allowed_cidrs"
+                ]
+              },
+              {
+                "name": "compute",
+                "purpose": "ECS・ALB",
+                "resources": [
+                  "aws_ecs_cluster",
+                  "aws_lb",
+                  "aws_ecs_service"
+                ],
+                "variables": [
+                  "cluster_name",
+                  "instance_types"
+                ]
+              },
+              {
+                "name": "database",
+                "purpose": "RDS・ElastiCache",
+                "resources": [
+                  "aws_db_instance",
+                  "aws_elasticache_cluster"
+                ],
+                "variables": [
+                  "db_instance_class",
+                  "multi_az"
+                ]
+              },
+              {
+                "name": "storage",
+                "purpose": "S3・EBS",
+                "resources": [
+                  "aws_s3_bucket",
+                  "aws_ebs_volume"
+                ],
+                "variables": [
+                  "bucket_names",
+                  "encryption_enabled"
+                ]
+              }
+            ],
+            "environments": [
+              "dev",
+              "staging",
+              "production"
+            ],
+            "state_management": "S3 + DynamoDB locking"
+          },
+          "terraform_best_practices": {
+            "state_management": {
+              "backend": "S3",
+              "state_locking": "DynamoDB",
+              "encryption": "AES-256",
+              "versioning": "enabled"
+            },
+            "module_design": {
+              "reusability": "環境間で再利用",
+              "parameterization": "変数による設定",
+              "output_values": "他モジュールとの連携",
+              "documentation": "README + variables.tf"
+            },
+            "security": {
+              "sensitive_variables": "marked as sensitive",
+              "secrets_management": "AWS Secrets Manager",
+              "resource_tagging": "統一タグ戦略",
+              "least_privilege": "最小権限IAM"
+            }
+          },
+          "terraform_code_example": "\n# VPC Module\nmodule \"vpc\" {\n  source = \"./modules/vpc\"\n  \n  vpc_cidr             = var.vpc_cidr\n  availability_zones   = var.availability_zones\n  environment         = var.environment\n  \n  tags = local.common_tags\n}\n\n# ECS Cluster\nmodule \"ecs\" {\n  source = \"./modules/compute\"\n  \n  cluster_name        = \"${var.environment}-realestate-dx\"\n  vpc_id             = module.vpc.vpc_id\n  private_subnet_ids = module.vpc.private_subnet_ids\n  security_group_ids = [module.security.ecs_sg_id]\n  \n  min_capacity = var.min_capacity\n  max_capacity = var.max_capacity\n  \n  tags = local.common_tags\n}\n\n# RDS Database\nmodule \"database\" {\n  source = \"./modules/database\"\n  \n  db_name            = var.db_name\n  db_username        = var.db_username\n  db_password        = random_password.db_password.result\n  instance_class     = var.db_instance_class\n  subnet_group_name  = module.vpc.db_subnet_group_name\n  security_group_ids = [module.security.db_sg_id]\n  \n  backup_retention_period = 30\n  multi_az               = true\n  \n  tags = local.common_tags\n}\n",
+          "advantages": [
+            "宣言的インフラ定義",
+            "状態管理",
+            "プランニング機能",
+            "プロバイダー豊富"
+          ],
+          "workflow": {
+            "plan": "terraform plan -var-file=prod.tfvars",
+            "apply": "terraform apply prod.tfplan",
+            "destroy": "terraform destroy -var-file=prod.tfvars",
+            "import": "terraform import aws_instance.example i-1234567890abcdef0"
+          }
+        },
+        "cloudformation": {
+          "valid": true,
+          "cloudformation_stacks": {
+            "network_stack": {
+              "template": "network.yaml",
+              "resources": [
+                "VPC",
+                "Subnets",
+                "RouteTables",
+                "InternetGateway"
+              ],
+              "outputs": [
+                "VpcId",
+                "SubnetIds",
+                "SecurityGroupIds"
+              ],
+              "parameters": [
+                "Environment",
+                "VpcCidr"
+              ]
+            },
+            "security_stack": {
+              "template": "security.yaml",
+              "resources": [
+                "SecurityGroups",
+                "NACLs",
+                "IAMRoles"
+              ],
+              "outputs": [
+                "SecurityGroupIds",
+                "IAMRoleArns"
+              ],
+              "parameters": [
+                "VpcId",
+                "Environment"
+              ]
+            },
+            "compute_stack": {
+              "template": "compute.yaml",
+              "resources": [
+                "ECSCluster",
+                "ApplicationLoadBalancer",
+                "ECSServices"
+              ],
+              "outputs": [
+                "ClusterArn",
+                "LoadBalancerDNS"
+              ],
+              "parameters": [
+                "VpcId",
+                "SubnetIds",
+                "SecurityGroupIds"
+              ]
+            },
+            "database_stack": {
+              "template": "database.yaml",
+              "resources": [
+                "RDSInstance",
+                "ElastiCacheCluster",
+                "S3Buckets"
+              ],
+              "outputs": [
+                "DatabaseEndpoint",
+                "CacheEndpoint"
+              ],
+              "parameters": [
+                "VpcId",
+                "SubnetIds",
+                "DBPassword"
+              ]
+            }
+          },
+          "nested_stack_design": {
+            "master_template": {
+              "name": "master.yaml",
+              "purpose": "メインスタック",
+              "nested_stacks": [
+                {
+                  "template": "network.yaml",
+                  "dependency": "none"
+                },
+                {
+                  "template": "security.yaml",
+                  "dependency": "network"
+                },
+                {
+                  "template": "compute.yaml",
+                  "dependency": "security"
+                },
+                {
+                  "template": "database.yaml",
+                  "dependency": "security"
+                }
+              ]
+            },
+            "stack_dependencies": {
+              "network → security": "VPC ID",
+              "security → compute": "Security Group IDs",
+              "security → database": "Security Group IDs"
+            }
+          },
+          "cf_best_practices": {
+            "template_design": {
+              "modular_approach": "機能別分割",
+              "parameter_validation": "制約・パターン",
+              "condition_usage": "環境別リソース",
+              "output_exports": "クロススタック参照"
+            },
+            "deployment": {
+              "change_sets": "変更前確認",
+              "rollback_configuration": "自動ロールバック",
+              "stack_policy": "リソース保護",
+              "termination_protection": "削除防止"
+            },
+            "monitoring": {
+              "cloudtrail": "API呼び出し監視",
+              "config": "設定変更追跡",
+              "drift_detection": "設定ドリフト検出",
+              "event_notifications": "SNS通知"
+            }
+          },
+          "advantages": [
+            "AWS ネイティブ",
+            "無料",
+            "完全なAWSサービス対応",
+            "ロールバック機能"
+          ],
+          "disadvantages": [
+            "JSON/YAML冗長",
+            "AWS専用",
+            "プラン機能なし",
+            "状態管理手動"
+          ]
+        },
+        "deployment_strategy": {
+          "valid": true,
+          "deployment_pipeline": {
+            "infrastructure_deployment": {
+              "trigger": "IaC変更",
+              "steps": [
+                "Terraform plan",
+                "Manual approval",
+                "Terraform apply",
+                "Infrastructure testing"
+              ],
+              "environments": [
+                "dev",
+                "staging",
+                "production"
+              ],
+              "rollback": "previous state"
+            },
+            "application_deployment": {
+              "trigger": "アプリケーション変更",
+              "steps": [
+                "Build Docker image",
+                "Push to ECR",
+                "Update ECS service",
+                "Health check"
+              ],
+              "strategy": "rolling update",
+              "rollback": "previous task definition"
+            }
+          },
+          "environment_management": {
+            "development": {
+              "purpose": "開発・テスト",
+              "infrastructure": "最小構成",
+              "auto_shutdown": "夜間・週末",
+              "data_protection": "不要"
+            },
+            "staging": {
+              "purpose": "本番前検証",
+              "infrastructure": "本番相当",
+              "auto_shutdown": "なし",
+              "data_protection": "匿名化データ"
+            },
+            "production": {
+              "purpose": "本番運用",
+              "infrastructure": "フル構成",
+              "auto_shutdown": "なし",
+              "data_protection": "完全"
+            }
+          },
+          "blue_green_deployment": {
+            "deployment_process": [
+              "Green環境準備",
+              "アプリケーションデプロイ",
+              "Green環境テスト",
+              "ロードバランサー切り替え",
+              "Blue環境監視",
+              "Blue環境削除"
+            ],
+            "advantages": [
+              "ゼロダウンタイム",
+              "即座のロールバック",
+              "本番同等テスト",
+              "リスク軽減"
+            ],
+            "considerations": [
+              "コスト倍増",
+              "データベース同期",
+              "セッション処理",
+              "複雑性増加"
+            ]
+          },
+          "automation_tools": {
+            "ci_cd": "GitHub Actions",
+            "infrastructure": "Terraform Cloud",
+            "monitoring": "CloudWatch",
+            "notification": "Slack + SNS"
+          },
+          "security_considerations": {
+            "secrets_management": "AWS Secrets Manager",
+            "access_control": "IAM roles",
+            "audit_logging": "CloudTrail",
+            "compliance": "SOC 2"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:44:24.374324"
+    },
+    {
+      "test_name": "監視・ログ管理",
+      "start_time": "2025-07-10T11:44:24.374326",
+      "success": true,
+      "details": {
+        "cloudwatch": {
+          "valid": true,
+          "metrics_monitoring": {
+            "infrastructure_metrics": [
+              {
+                "metric": "CPUUtilization",
+                "threshold": "80%",
+                "period": "5 minutes"
+              },
+              {
+                "metric": "MemoryUtilization",
+                "threshold": "85%",
+                "period": "5 minutes"
+              },
+              {
+                "metric": "NetworkIn/Out",
+                "threshold": "1 Gbps",
+                "period": "1 minute"
+              },
+              {
+                "metric": "DiskReadOps/WriteOps",
+                "threshold": "1000 IOPS",
+                "period": "1 minute"
+              }
+            ],
+            "application_metrics": [
+              {
+                "metric": "RequestCount",
+                "threshold": "1000 RPM",
+                "period": "1 minute"
+              },
+              {
+                "metric": "TargetResponseTime",
+                "threshold": "500ms",
+                "period": "1 minute"
+              },
+              {
+                "metric": "HTTPCode_Target_4XX_Count",
+                "threshold": "10/minute",
+                "period": "1 minute"
+              },
+              {
+                "metric": "HTTPCode_Target_5XX_Count",
+                "threshold": "1/minute",
+                "period": "1 minute"
+              }
+            ],
+            "database_metrics": [
+              {
+                "metric": "DatabaseConnections",
+                "threshold": "80% of max",
+                "period": "5 minutes"
+              },
+              {
+                "metric": "ReadLatency/WriteLatency",
+                "threshold": "20ms",
+                "period": "1 minute"
+              },
+              {
+                "metric": "CPUUtilization",
+                "threshold": "75%",
+                "period": "5 minutes"
+              },
+              {
+                "metric": "FreeStorageSpace",
+                "threshold": "20%",
+                "period": "5 minutes"
+              }
+            ]
+          },
+          "alarm_configuration": {
+            "critical_alarms": [
+              {
+                "name": "High CPU Utilization",
+                "metric": "CPUUtilization",
+                "threshold": 90,
+                "comparison": "GreaterThanThreshold",
+                "evaluation_periods": 2,
+                "period": 300,
+                "actions": [
+                  "SNS notification",
+                  "Auto scaling"
+                ]
+              },
+              {
+                "name": "High Error Rate",
+                "metric": "HTTPCode_Target_5XX_Count",
+                "threshold": 10,
+                "comparison": "GreaterThanThreshold",
+                "evaluation_periods": 1,
+                "period": 60,
+                "actions": [
+                  "SNS notification",
+                  "PagerDuty"
+                ]
+              }
+            ],
+            "warning_alarms": [
+              {
+                "name": "Moderate CPU Utilization",
+                "metric": "CPUUtilization",
+                "threshold": 70,
+                "comparison": "GreaterThanThreshold",
+                "evaluation_periods": 3,
+                "period": 300,
+                "actions": [
+                  "SNS notification"
+                ]
+              }
+            ]
+          },
+          "dashboard_configuration": {
+            "operational_dashboard": {
+              "widgets": [
+                "System Overview",
+                "Application Performance",
+                "Database Metrics",
+                "Error Rates",
+                "User Activity"
+              ],
+              "refresh_interval": "1 minute",
+              "time_range": "last 24 hours"
+            },
+            "business_dashboard": {
+              "widgets": [
+                "Daily Active Users",
+                "Property Views",
+                "API Usage",
+                "Revenue Metrics",
+                "SLA Compliance"
+              ],
+              "refresh_interval": "5 minutes",
+              "time_range": "last 7 days"
+            }
+          },
+          "custom_metrics": {
+            "business_metrics": "プロパティビュー数・ユーザーアクティビティ",
+            "performance_metrics": "API応答時間・スループット",
+            "error_metrics": "エラー率・失敗数",
+            "security_metrics": "ログイン失敗・不審なアクティビティ"
+          },
+          "notification_channels": {
+            "email": "運用チーム",
+            "slack": "#alerts チャンネル",
+            "pagerduty": "緊急事態のみ",
+            "sns": "自動化トリガー"
+          }
+        },
+        "log_management": {
+          "valid": true,
+          "log_collection": {
+            "application_logs": {
+              "source": "ECS containers",
+              "destination": "CloudWatch Logs",
+              "log_driver": "awslogs",
+              "retention": "30 days",
+              "log_groups": [
+                "/aws/ecs/web-app",
+                "/aws/ecs/api-server",
+                "/aws/ecs/background-worker"
+              ]
+            },
+            "infrastructure_logs": {
+              "vpc_flow_logs": "S3 bucket",
+              "alb_access_logs": "S3 bucket",
+              "cloudtrail_logs": "CloudWatch Logs",
+              "rds_logs": "CloudWatch Logs"
+            },
+            "security_logs": {
+              "cloudtrail": "API calls",
+              "config": "configuration changes",
+              "guardduty": "threat detection",
+              "security_hub": "security findings"
+            }
+          },
+          "log_analysis": {
+            "cloudwatch_insights": {
+              "queries": [
+                "ERROR log analysis",
+                "Performance bottleneck detection",
+                "User activity patterns",
+                "Security incident investigation"
+              ],
+              "scheduled_queries": "daily reports",
+              "alerting": "anomaly detection"
+            },
+            "elasticsearch": {
+              "cluster_size": "3 nodes",
+              "instance_type": "t3.medium",
+              "storage": "100GB EBS gp3",
+              "use_cases": [
+                "log search",
+                "analytics",
+                "visualization"
+              ]
+            },
+            "log_correlation": {
+              "trace_id": "request tracing",
+              "user_id": "user activity tracking",
+              "session_id": "session analysis",
+              "tenant_id": "tenant isolation"
+            }
+          },
+          "log_retention": {
+            "retention_policies": {
+              "application_logs": "30 days CloudWatch → 1 year S3",
+              "access_logs": "90 days S3 IA → 7 years Glacier",
+              "audit_logs": "7 years S3 → 10 years Deep Archive",
+              "debug_logs": "7 days CloudWatch"
+            },
+            "lifecycle_management": {
+              "hot_storage": "CloudWatch Logs (0-30 days)",
+              "warm_storage": "S3 Standard-IA (30 days - 1 year)",
+              "cold_storage": "S3 Glacier (1-7 years)",
+              "archive_storage": "S3 Glacier Deep Archive (7+ years)"
+            }
+          },
+          "log_format": {
+            "structured_logging": "JSON format",
+            "fields": [
+              "timestamp",
+              "level",
+              "message",
+              "trace_id",
+              "user_id"
+            ],
+            "standardization": "ECS logging format",
+            "encoding": "UTF-8"
+          },
+          "cost_optimization": {
+            "log_filtering": "不要ログ除外",
+            "compression": "gzip compression",
+            "sampling": "high-volume logs",
+            "lifecycle_policies": "automatic transition"
+          }
+        },
+        "application_monitoring": {
+          "valid": true,
+          "apm_solution": {
+            "new_relic": {
+              "features": [
+                "アプリケーション監視",
+                "データベースモニタリング",
+                "リアルユーザーモニタリング",
+                "合成監視"
+              ],
+              "metrics": [
+                "Response time",
+                "Throughput",
+                "Error rate",
+                "Apdex score"
+              ],
+              "integration": "Node.js agent"
+            },
+            "datadog": {
+              "features": [
+                "インフラ監視",
+                "ログ管理",
+                "APM",
+                "セキュリティ監視"
+              ],
+              "metrics": [
+                "custom metrics",
+                "business metrics"
+              ],
+              "integration": "AWS integration"
+            }
+          },
+          "distributed_tracing": {
+            "aws_x_ray": {
+              "setup": "X-Ray SDK integration",
+              "trace_sampling": "10% sampling rate",
+              "service_map": "automatic generation",
+              "performance_insights": "bottleneck detection"
+            },
+            "jaeger": {
+              "deployment": "ECS service",
+              "storage": "Elasticsearch",
+              "ui": "Jaeger Query",
+              "retention": "7 days"
+            },
+            "trace_correlation": {
+              "span_tags": [
+                "user_id",
+                "tenant_id",
+                "operation"
+              ],
+              "baggage": "context propagation",
+              "sampling": "adaptive sampling",
+              "alerting": "high latency traces"
+            }
+          },
+          "health_monitoring": {
+            "application_health": {
+              "endpoint": "/health",
+              "checks": [
+                "database connectivity",
+                "redis connectivity",
+                "external API status",
+                "disk space"
+              ],
+              "response_format": "JSON",
+              "timeout": "5 seconds"
+            },
+            "deep_health_checks": {
+              "endpoint": "/health/detailed",
+              "checks": [
+                "database query performance",
+                "cache hit ratio",
+                "queue depth",
+                "memory usage"
+              ],
+              "frequency": "1 minute",
+              "alerting": "degraded status"
+            },
+            "synthetic_monitoring": {
+              "tools": [
+                "CloudWatch Synthetics",
+                "Pingdom"
+              ],
+              "tests": [
+                "login flow",
+                "property search",
+                "file upload",
+                "API endpoints"
+              ],
+              "frequency": "1 minute",
+              "locations": [
+                "Tokyo",
+                "Singapore",
+                "Oregon"
+              ]
+            }
+          },
+          "performance_budgets": {
+            "page_load_time": "< 3 seconds",
+            "api_response_time": "< 500ms (95th percentile)",
+            "error_rate": "< 0.1%",
+            "availability": "> 99.9%"
+          },
+          "alerting_strategy": {
+            "severity_levels": [
+              "Critical",
+              "Warning",
+              "Info"
+            ],
+            "escalation": "15 min → 30 min → 1 hour",
+            "on_call_rotation": "24/7 coverage",
+            "runbooks": "incident response procedures"
+          }
+        },
+        "overall_validity": true
+      },
+      "errors": [],
+      "end_time": "2025-07-10T11:44:24.374337"
+    }
+  ],
+  "summary": {
+    "total_tests": 3,
+    "successful_tests": 3,
+    "success_rate": "100.0%",
+    "overall_success": true
+  },
+  "end_time": "2025-07-10T11:44:24.374369"
+}

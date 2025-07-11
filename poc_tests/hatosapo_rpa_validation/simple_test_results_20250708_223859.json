@@ -1,0 +1,88 @@
+{
+  "start_time": "2025-07-08T22:38:59.730596",
+  "tests": [
+    {
+      "test_name": "初期アクセス",
+      "start_time": "2025-07-08T22:38:59.731066",
+      "success": true,
+      "details": {
+        "response_code": 200,
+        "content_length": 13977,
+        "url": "https://account.zentaku.or.jp/login?origin=https%3A%2F%2Fmember.zentaku.or.jp%2F&oid=Z00",
+        "login_form_detected": true,
+        "form_action": "",
+        "input_fields": 5,
+        "password_fields": 1,
+        "page_title": "ハトサポログイン | 「ハトサポ」宅建協会会員業務支援サイト | 全宅連",
+        "captcha_detected": true,
+        "javascript_count": 8,
+        "html_preview": "<!DOCTYPE html>\n<html lang=\"ja\">\n\n<head>\n\n\t<title>ハトサポログイン | 「ハトサポ」宅建協会会員業務支援サイト | 全宅連</title>\n\t<meta name=\"description\" content=\"宅建協会会員業務支援サイト「ハトサポ 」へのログインはこちら\" />\n\n\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\">\n\t<script src=\"/static/js/common/viewport.js\"></script>\n\n\t<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/static/favicon.ico?202401\">\n\t<link href=\"/static/css/lib/Noto_Sans_JP.css\"\n\t\trel=\"stylesheet\">\n\t<link rel=\"stylesheet\" href=\"/static/css/lib/bootstrap.min.css\">\n\t<link href=\"/static/css/lib/fontawesome_all.css\" rel=\"stylesheet\">\n\t<link rel=\"stylesheet\" href=\"/static/css/reset.css\">\n\t\n\t<link rel=\"stylesheet\" href=\"/static/css/style.css?20210501\">\n\t\n\n\t<script src=\"/static/js/assets/jquery-3.2.1.min.js\"></script>\n\t<script src=\"/static/js/assets/bootstrap.min.js\"></script>\n\t<script src=\"/static/js/assets/jquery.easing.js\"></script>\n\t<script src=\"/static/js/assets/TweenMax.min.js\"></script>\n\t\n\t\n\t\n\t<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':\n\tnew Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],\n\tj=d.createElement(s),dl=l!='dataLayer'?'&amp;l='+l:'';j.async=true;j.src=\n\t'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);\n\t})(window,document,'script','dataLayer','GTM-WZMZPWP');</script>\n\t\n\t\n</head>\n\n<body>\n\t\n\t\n\t<noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id=GTM-WZMZPWP\"\n\theight=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>\n\t\n\t\n\n    <noscript><div style=\"color:red; margin: 0px;display: block;padding: 5px;background-color: antiquewhite;font-size: 18px;\" >本サイトはJavaScriptを有効な状態でご利用ください。JavaScriptが有効でない場合すべての機能をご利用いただけません。</div></noscript>\n    <script src=\"/static/js/ckcheck.js\"></script>\n    <div style=\"color:red; margin: 0px;display: none;padding: 5px;background-color: antiquewhite;font-size: 18px;\" id=\"wrn-msg\">\n        ブラウザ設定によりすべての機能をご利用いただけません。以下のように設定してください。\n"
+      },
+      "errors": [
+        "CAPTCHA機能が有効"
+      ],
+      "end_time": "2025-07-08T22:38:59.871115"
+    },
+    {
+      "test_name": "ログインフォーム解析",
+      "start_time": "2025-07-08T22:38:59.871147",
+      "success": true,
+      "details": {
+        "form_elements": {
+          "form_tag": [
+            "<form method=\"POST\" action=\"\" class=\"form\">"
+          ],
+          "input_name_type": [
+            [
+              "password",
+              "password"
+            ]
+          ],
+          "input_type_name": [
+            [
+              "text",
+              "username"
+            ],
+            [
+              "hidden",
+              "origin"
+            ],
+            [
+              "hidden",
+              "oid"
+            ],
+            [
+              "hidden",
+              "client_id"
+            ],
+            [
+              "password",
+              "password"
+            ]
+          ]
+        },
+        "user_id_candidates": [
+          "username",
+          "oid",
+          "client_id"
+        ],
+        "password_candidates": [
+          "password",
+          "password"
+        ],
+        "submit_candidates": [
+          "ログイン"
+        ]
+      },
+      "errors": [],
+      "end_time": "2025-07-08T22:38:59.930134"
+    }
+  ],
+  "summary": {
+    "total_tests": 2,
+    "successful_tests": 2,
+    "success_rate": "100.0%",
+    "overall_success": true
+  },
+  "end_time": "2025-07-08T22:38:59.987305"
+}
