@@ -1,0 +1,78 @@
+name: Deploy Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  # プレビュー環境のデプロイ（将来の実装用テンプレート）
+  deploy-preview:
+    name: Deploy Preview Environment
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup deployment info
+        id: deploy-info
+        run: |
+          echo "preview_url=https://pr-${{ github.event.pull_request.number }}.preview.real-estate-dx.dev" >> $GITHUB_OUTPUT
+          echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+
+      - name: Comment deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 🚀 Preview Deployment
+            
+            | Status | Preview URL | Branch |
+            |--------|-------------|--------|
+            | ⏳ Pending | [${{ steps.deploy-info.outputs.preview_url }}](${{ steps.deploy-info.outputs.preview_url }}) | \`${{ steps.deploy-info.outputs.branch_name }}\` |
+            
+            > **Note**: Preview deployment is not yet configured. This is a placeholder for future implementation.
+            
+            ### Next Steps:
+            1. Configure Google Cloud Build triggers
+            2. Set up preview environment infrastructure
+            3. Update this workflow with actual deployment steps
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      # TODO: 実際のデプロイステップをここに追加
+      # 例:
+      # - name: Build Docker images
+      #   run: ...
+      # 
+      # - name: Deploy to Google Cloud Run
+      #   run: ...
+      # 
+      # - name: Run smoke tests
+      #   run: ...
+
+  # プレビュー環境のクリーンアップ
+  cleanup-preview:
+    name: Cleanup Preview Environment
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    steps:
+      - name: Cleanup resources
+        run: |
+          echo "🧹 Cleaning up preview environment for PR #${{ github.event.pull_request.number }}"
+          echo "TODO: Add actual cleanup steps here"
+          
+          # TODO: 実際のクリーンアップステップをここに追加
+          # 例:
+          # - Google Cloud Runのサービス削除
+          # - Cloud SQLの一時データベース削除
+          # - Cloud Storageの一時バケット削除

@@ -1,0 +1,188 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  # PR タイトルチェック
+  pr-title:
+    name: PR Title Convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            api
+            web
+            ai-worker
+            shared
+            deps
+            docker
+            ci
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            didn't match the configured pattern. Please ensure that the subject
+            doesn't start with an uppercase character.
+
+  # ファイルサイズチェック
+  file-size:
+    name: File Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check file sizes
+        run: |
+          echo "Checking for large files..."
+          large_files=$(find . -type f -size +1M -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./dist/*")
+          
+          if [ -n "$large_files" ]; then
+            echo "⚠️ Large files detected (>1MB):"
+            echo "$large_files"
+            echo ""
+            echo "Please consider:"
+            echo "- Using Git LFS for large binary files"
+            echo "- Optimizing images"
+            echo "- Moving large files to external storage"
+            exit 1
+          else
+            echo "✅ No large files detected"
+          fi
+
+  # 変更ファイル分析
+  changed-files:
+    name: Analyze Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      api_changed: ${{ steps.changes.outputs.api }}
+      web_changed: ${{ steps.changes.outputs.web }}
+      docker_changed: ${{ steps.changes.outputs.docker }}
+      docs_changed: ${{ steps.changes.outputs.docs }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check changed files
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'packages/**'
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+            docker:
+              - '**/Dockerfile*'
+              - 'docker-compose*.yml'
+              - '.dockerignore'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+
+  # 条件付きテスト実行
+  conditional-tests:
+    name: Run Affected Tests
+    runs-on: ubuntu-latest
+    needs: changed-files
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run API tests
+        if: needs.changed-files.outputs.api_changed == 'true'
+        run: pnpm --filter @real-estate-dx/api test
+        continue-on-error: true
+
+      - name: Run Web tests
+        if: needs.changed-files.outputs.web_changed == 'true'
+        run: pnpm --filter web test
+        continue-on-error: true
+
+  # ブランチ保護チェック
+  branch-protection:
+    name: Branch Protection Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check base branch
+        run: |
+          if [[ "${{ github.base_ref }}" == "main" || "${{ github.base_ref }}" == "master" ]]; then
+            echo "⚠️ Direct PR to ${{ github.base_ref }} branch detected"
+            echo "Please consider creating PR to 'develop' branch first"
+          else
+            echo "✅ PR target branch is appropriate"
+          fi
+
+  # Prisma変更チェック
+  prisma-check:
+    name: Prisma Schema Check
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.files, 'schema.prisma')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma schema
+        run: |
+          pnpm --filter @real-estate-dx/api exec prisma validate
+          pnpm --filter @real-estate-dx/api exec prisma format --check
+
+      - name: Generate migration warning
+        run: |
+          echo "⚠️ Prisma schema changes detected!"
+          echo "Remember to:"
+          echo "1. Run 'pnpm --filter @real-estate-dx/api exec prisma migrate dev'"
+          echo "2. Test migrations locally"
+          echo "3. Update seed data if necessary"

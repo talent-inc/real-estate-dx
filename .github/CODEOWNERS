@@ -1,0 +1,61 @@
+# CODEOWNERS file for Real Estate DX System
+# これは自動レビュアー割り当ての設定ファイルです
+# フォーマット: <pattern> <owner1> <owner2> ...
+
+# デフォルトオーナー（全てのファイル）
+* @real-estate-dx/core-team
+
+# ドキュメント
+/docs/ @real-estate-dx/docs-team
+*.md @real-estate-dx/docs-team
+
+# Backend (API)
+/apps/api/ @real-estate-dx/backend-team
+/packages/database/ @real-estate-dx/backend-team
+/packages/shared/ @real-estate-dx/backend-team
+
+# Frontend (Web)
+/apps/web/ @real-estate-dx/frontend-team
+/packages/ui/ @real-estate-dx/frontend-team
+
+# AI Worker
+/apps/ai-worker/ @real-estate-dx/ai-team
+
+# Infrastructure & DevOps
+/infrastructure/ @real-estate-dx/devops-team
+/.github/ @real-estate-dx/devops-team
+/docker-compose*.yml @real-estate-dx/devops-team
+**/Dockerfile* @real-estate-dx/devops-team
+/.dockerignore @real-estate-dx/devops-team
+
+# 重要な設定ファイル
+/package.json @real-estate-dx/core-team
+/pnpm-lock.yaml @real-estate-dx/core-team
+/turbo.json @real-estate-dx/core-team
+/.env.example @real-estate-dx/security-team
+
+# セキュリティ関連
+/apps/api/src/middlewares/auth.middleware.ts @real-estate-dx/security-team
+/apps/api/src/services/auth.service.ts @real-estate-dx/security-team
+/apps/api/src/utils/jwt.ts @real-estate-dx/security-team
+
+# データベース関連
+**/schema.prisma @real-estate-dx/database-team
+/apps/api/prisma/ @real-estate-dx/database-team
+
+# 法令関連機能
+/apps/api/src/services/legal-check.service.ts @real-estate-dx/legal-team
+/apps/api/src/services/contract.service.ts @real-estate-dx/legal-team
+
+# テスト
+/**/__tests__/ @real-estate-dx/qa-team
+/**/*.test.ts @real-estate-dx/qa-team
+/**/*.test.tsx @real-estate-dx/qa-team
+/**/*.spec.ts @real-estate-dx/qa-team
+/**/*.spec.tsx @real-estate-dx/qa-team
+
+# CI/CD
+/.github/workflows/ @real-estate-dx/devops-team @real-estate-dx/core-team
+
+# 注: チーム名は実際のGitHub組織に合わせて変更してください
+# 例: @your-org/backend-team または @username

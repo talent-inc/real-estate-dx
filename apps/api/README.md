@@ -134,20 +134,20 @@ pnpm format
 ### データベース操作
 ```bash
 # Prisma Studio起動（データベースGUI）
-pnpm db:studio
+npx prisma studio
 # → http://localhost:5555
 
-# スキーマ反映
-pnpm db:push
+# マイグレーション実行
+npx prisma migrate dev --name init
 
-# マイグレーション作成・実行
-pnpm db:migrate
-
-# 初期データ投入
-pnpm db:seed
+# Prisma Client生成
+npx prisma generate
 
 # データベースリセット
-pnpm db:reset
+npx prisma migrate reset
+
+# シードデータ実行
+npx tsx prisma/seed.ts
 ```
 
 ### デバッグ・監視
@@ -820,6 +820,36 @@ describe('Authentication', () => {
 ```
 
 ---
+
+## 🔄 環境切り替え
+
+### データソースの切り替え
+
+本プロジェクトでは環境変数により開発用のインメモリストレージと本番用のデータベースを切り替えることができます。
+
+#### 開発環境（インメモリ）
+```bash
+# .env
+USE_DEV_DATA="true"    # インメモリストレージを使用
+ENABLE_MOCK_AUTH="false"
+```
+
+- データはメモリ上に保存（サーバー再起動でリセット）
+- 高速な開発とテストが可能
+- 外部DBへの依存なし
+
+#### 本番環境（Prisma/DB）
+```bash
+# .env
+USE_DEV_DATA="false"   # Prismaを使用
+DATABASE_URL="postgresql://user:password@host:5432/db"
+```
+
+- データは永続化
+- マイグレーション管理
+- トランザクション処理
+
+詳細は [データベースセットアップガイド](../../docs/development/database-setup.md) を参照。
 
 ## 🚨 トラブルシューティング
 
