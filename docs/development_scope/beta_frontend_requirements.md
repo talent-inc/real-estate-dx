@@ -13,37 +13,46 @@
 
 ---
 
-## 🎨 デザイン改善指針
+## 🎨 デザインシステム - Apple-Inspired Excellence
 
-### 配色設計
-不動産業界の信頼感・高級感・親しみやすさを表現する配色：
+### 設計哲学：Precision. Simplicity. Humanity.
+
+不動産のプロフェッショナルが、テクノロジーを意識することなく、本質的な仕事に集中できるデザイン。
+
+### 配色 - The Palette of Clarity
 
 ```css
 :root {
-  /* メインカラー（信頼・安定） */
-  --primary: #1A3A5F; /* ディープブルー */
-  --primary-hover: #234A72;
+  /* Ink - 情報の声 */
+  --ink: #1d1d1f;
+  --ink-secondary: #6e6e73;
+  --ink-tertiary: #c7c7cc;
   
-  /* サブカラー（親しみやすさ） */
-  --background: #F8F5ED; /* サンドベージュ */
-  --surface: #F0F2F5; /* ウォームグレー */
+  /* Surfaces - 静謐な舞台 */
+  --surface: #ffffff;
+  --surface-elevated: #f5f5f7;
+  --surface-secondary: #fafafa;
   
-  /* アクセントカラー（高級感） */
-  --accent: #B8860B; /* ゴールド */
-  --accent-secondary: #C25B3A; /* テラコッタ */
+  /* Interactive - 行動への誘い */
+  --tint: #007AFF;
+  --tint-hover: #0051D5;
   
-  /* テキストカラー */
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-muted: #999999;
+  /* Semantic - 明確な意味 */
+  --positive: #34C759;
+  --critical: #FF3B30;
+  
+  /* Foundation - 見えない構造 */
+  --shadow: rgba(0,0,0,0.08);
+  --border: rgba(0,0,0,0.08);
 }
 ```
 
 ### デザイン原則
-1. **情報階層の明確化** - 概要ファースト、段階的開示
-2. **ゆとりある余白** - 視覚的な圧迫感を軽減
-3. **プロフェッショナルな外観** - 顧客の前でも自信を持てるデザイン
-4. **直感的な操作性** - 忙しい営業担当者でもすぐに使える
+
+1. **One Thing Well** - 各画面は1つのことを完璧に
+2. **Depth Through Simplicity** - シンプルさの中に深さを
+3. **Emotional Precision** - すべての要素に意味と感情を
+4. **Invisible Excellence** - 最高のデザインは透明である
 
 ---
 
@@ -229,93 +238,115 @@ const PropertyCard = ({ property }) => (
 
 ### コンポーネント別改善指針
 
-#### ボタンコンポーネント
+#### ボタン - The Moment of Decision
 ```tsx
-// 改善前
-<Button variant="default" size="default">
-
-// 改善後
-<Button 
-  variant="primary" // primary, secondary, ghost
-  size="large" // large, medium, small
-  loading={isLoading}
-  icon={<SearchIcon />}
->
+// シンプルさの極致
+<Button variant="primary">物件を登録</Button>
+<Button variant="secondary">キャンセル</Button>
 ```
 
 **デザイン仕様**:
-- パディング: large(16px 32px), medium(12px 24px), small(8px 16px)
-- フォントサイズ: large(16px), medium(14px), small(12px)
-- 角丸: 6px（親しみやすさ）
-- ホバー時: 背景色を10%明るく、影を追加
-- クリック時: スケール0.98のアニメーション
+```css
+.button {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 22px; /* 完璧な円弧 */
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-#### カードコンポーネント
+.button-primary {
+  background: var(--tint);
+  color: white;
+  /* ホバー: 自信の深まり */
+  &:hover { 
+    background: var(--tint-hover);
+    transform: scale(1.02);
+  }
+}
+```
+
+#### カード - Information, Refined
 ```tsx
-// 物件カード改善版
+// 必要な情報だけを、美しく
 <PropertyCard>
   <PropertyCard.Image />
-  <PropertyCard.Summary> {/* 主要情報のみ */}
+  <PropertyCard.Content>
+    <PropertyCard.Title />
     <PropertyCard.Price />
-    <PropertyCard.Location />
-    <PropertyCard.KeyFeatures />
-  </PropertyCard.Summary>
-  <PropertyCard.Details collapsible> {/* 詳細は折りたたみ */}
-    <PropertyCard.Specs />
-    <PropertyCard.Description />
-  </PropertyCard.Details>
-  <PropertyCard.Actions />
+    <PropertyCard.Details />
+  </PropertyCard.Content>
 </PropertyCard>
 ```
 
 **デザイン仕様**:
-- 影: 0 2px 8px rgba(0,0,0,0.08)
-- ホバー時の影: 0 4px 16px rgba(0,0,0,0.12)
-- パディング: 20px（ゆとりある余白）
-- 情報グループ間のマージン: 16px
+```css
+.card {
+  background: var(--surface);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px var(--shadow);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+}
+```
 
-#### フォーム入力
+#### 入力 - Thought Made Form
 ```tsx
-// 改善版入力フィールド
-<FormField>
-  <Label required>物件名</Label>
-  <Input 
-    size="large"
-    placeholder="例：〇〇マンション"
-    error={errors.propertyName}
-    helpText="顧客に表示される名称です"
-  />
-  <ErrorMessage />
-</FormField>
+// 思考を妨げない、自然な入力体験
+<Input 
+  placeholder="物件名を入力"
+  value={value}
+  onChange={onChange}
+/>
 ```
 
 **デザイン仕様**:
-- 入力フィールド高さ: 48px（タッチ操作考慮）
-- ボーダー: 1.5px（視認性向上）
-- フォーカス時: プライマリカラーのボーダー + 淡い背景色
-- エラー時: 赤色ボーダー + エラーアイコン
+```css
+.input {
+  height: 44px;
+  padding: 0 16px;
+  background: var(--surface-elevated);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    background: var(--surface);
+    border-color: var(--tint);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+  }
+}
+```
 
-### アニメーション仕様
+### モーション - Meaningful Movement
 
 ```css
-/* 基本トランジション */
-.transition-base {
-  transition: all 0.2s ease-out;
+/* The Sacred Curves */
+:root {
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
+  --duration-fast: 0.2s;
+  --duration-normal: 0.3s;
 }
 
-/* ホバーエフェクト */
-.hover-lift {
-  transform: translateY(0);
-  transition: transform 0.2s ease-out;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
+/* Loading - 不安を和らげる脈動 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-/* ローディングスケルトン */
-@keyframes skeleton-loading {
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
+/* Success - 静かな達成感 */
+@keyframes success {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
 ```
 
