@@ -1,0 +1,30 @@
+# Simplified Dockerfile for testing
+# Builds any service in the monorepo
+
+ARG SERVICE=api
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache openssl ca-certificates
+
+# Copy package files
+COPY package*.json ./
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+
+# Install pnpm
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+
+# Copy all source code
+COPY . .
+
+# Set working directory to specific service
+WORKDIR /app/apps/${SERVICE}
+
+# Generate Prisma client if needed
+RUN if [ -f "prisma/schema.prisma" ]; then pnpm exec prisma generate; fi
+
+# Default command (will be overridden by docker-compose)
+CMD ["npm", "run", "dev"]

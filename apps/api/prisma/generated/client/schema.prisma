@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Note: This is a simplified schema for initial setup
+// The full schema is defined in ../../database/schema.prisma
+// This will be synchronized once the main schema is finalized
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  subdomain String   @unique
+  plan      String   @default("FREE")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users      User[]
+  properties Property[]
+  ocrJobs    OcrJob[]
+
+  @@map("tenants")
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String
+  role     String @default("USER")
+
+  // Multi-tenant
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  properties Property[]
+  ocrJobs    OcrJob[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Property {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  type        String
+  status      String  @default("ACTIVE")
+  price       Float?
+  area        Float?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+
+  // Multi-tenant
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Owner
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  images  PropertyImage[]
+  ocrJobs OcrJob[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("properties")
+}
+
+model PropertyImage {
+  id           String  @id @default(cuid())
+  url          String
+  thumbnailUrl String?
+  isMain       Boolean @default(false)
+
+  // Property relation
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("property_images")
+}
+
+model OcrJob {
+  id           String  @id @default(cuid())
+  filename     String
+  originalUrl  String
+  status       String  @default("PENDING")
+  result       String?
+  errorMessage String?
+
+  // Multi-tenant
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // User who created the job
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Optional property link
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ocr_jobs")
+}
+
+// Note: SQLite doesn't support enums, using String instead
+// PropertyType: APARTMENT, HOUSE, LAND, OFFICE, STORE
+// PropertyStatus: ACTIVE, PENDING, SOLD, SUSPENDED  
+// OcrStatus: PENDING, PROCESSING, COMPLETED, FAILED

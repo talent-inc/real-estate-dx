@@ -1,0 +1,97 @@
+# API Server Dockerfile
+# Multi-stage build for optimized production image
+
+# Development stage
+FROM node:20-alpine AS development
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    openssl \
+    ca-certificates
+
+# Copy package files
+COPY package*.json ./
+COPY ../../pnpm-lock.yaml ./
+
+# Install pnpm and dependencies
+RUN corepack enable pnpm
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client
+RUN pnpm exec prisma generate
+
+# Expose port
+EXPOSE 8000
+
+# Development command
+CMD ["pnpm", "run", "dev"]
+
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    openssl \
+    ca-certificates
+
+# Copy package files
+COPY package*.json ./
+COPY ../../pnpm-lock.yaml ./
+
+# Install pnpm and dependencies
+RUN corepack enable pnpm
+RUN pnpm install --frozen-lockfile
+
+# Copy source code and Prisma schema
+COPY . .
+
+# Generate Prisma client
+RUN pnpm exec prisma generate
+
+# Build application
+RUN pnpm run build
+
+# Production stage
+FROM node:20-alpine AS production
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    openssl \
+    ca-certificates \
+    dumb-init \
+    && addgroup -g 1001 -S nodejs \
+    && adduser -S nodejs -u 1001
+
+# Copy package files
+COPY package*.json ./
+
+# Install pnpm and production dependencies only
+RUN corepack enable pnpm
+RUN pnpm install --prod --frozen-lockfile
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+
+# Create uploads directory
+RUN mkdir -p uploads && chown nodejs:nodejs uploads
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD node -e "const http = require('http'); http.get('http://localhost:8000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+
+# Production command
+CMD ["dumb-init", "node", "dist/index.js"]

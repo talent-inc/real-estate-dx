@@ -203,3 +203,4 @@ volumes:
 networks:
   real-estate-dx-network:
     driver: bridge
+    name: real-estate-dx-network

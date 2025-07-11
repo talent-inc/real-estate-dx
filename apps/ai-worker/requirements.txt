@@ -1,0 +1,45 @@
+# AI Worker Service Dependencies
+
+# Web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# AI and ML libraries
+google-generativeai==0.3.2
+google-cloud-aiplatform==1.36.4
+transformers==4.35.2
+torch==2.1.1
+torchvision==0.16.1
+pillow==10.1.0
+pdf2image==1.16.3
+PyPDF2==3.0.1
+
+# OCR libraries
+pytesseract==0.3.10
+opencv-python==4.8.1.78
+
+# Data processing
+numpy==1.24.4
+pandas==2.1.4
+requests==2.31.0
+
+# Async and queue processing
+aioredis==2.0.1
+celery==5.3.4
+
+# Validation and serialization
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Environment and configuration
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Monitoring and logging
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# Development dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2

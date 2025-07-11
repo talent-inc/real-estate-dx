@@ -1,0 +1,120 @@
+# Development Environment Docker Compose
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # API Server
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: real-estate-dx-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/real_estate_dx
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-key
+      - JWT_EXPIRES_IN=7d
+      - UPLOAD_DIR=/app/uploads
+      - PORT=8000
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+      - uploads_data:/app/uploads
+    networks:
+      - real-estate-dx-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Web Frontend
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: real-estate-dx-web-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=dev-nextauth-secret
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - real-estate-dx-network
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # AI Worker Service
+  ai-worker:
+    build:
+      context: ./apps/ai-worker
+      dockerfile: Dockerfile
+      target: development
+    container_name: real-estate-dx-ai-worker-dev
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHON_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - API_URL=http://api:8000
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/google-service-account.json
+    volumes:
+      - ./apps/ai-worker:/app
+      - ai_models_data:/app/models
+      - ./credentials:/app/credentials:ro
+    networks:
+      - real-estate-dx-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Database Migration Runner
+  migration:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: real-estate-dx-migration-dev
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/real_estate_dx
+    volumes:
+      - ./apps/api:/app
+    networks:
+      - real-estate-dx-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["pnpm", "exec", "prisma", "migrate", "dev"]
+    profiles:
+      - migration
+
+volumes:
+  uploads_data:
+    driver: local
+  ai_models_data:
+    driver: local
+
+# Extend the existing network
+networks:
+  real-estate-dx-network:
+    external: true

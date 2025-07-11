@@ -8,6 +8,8 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
   },
+  // Required for Docker production builds
+  output: 'standalone',
 }
 
 module.exports = nextConfig

@@ -1,0 +1,68 @@
+# Simplified Docker Compose for Testing - Updated with Gemini's advice
+# Use: docker-compose -f docker-compose.simple.yml up
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database (tested configuration)
+  postgres:
+    image: postgres:15-alpine
+    container_name: real-estate-dx-postgres-simple
+    environment:
+      POSTGRES_DB: real_estate_dx
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_simple_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache (tested configuration)
+  redis:
+    image: redis:7-alpine
+    container_name: real-estate-dx-redis-simple
+    command: redis-server --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_simple_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Server (Gemini's simple approach)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.simple
+    container_name: real-estate-dx-api-simple
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/real_estate_dx
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=dev-secret-key
+      - PORT=8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_simple_data:
+    driver: local
+  redis_simple_data:
+    driver: local
+
+networks:
+  default:
+    name: real-estate-dx-simple

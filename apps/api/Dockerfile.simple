@@ -1,0 +1,43 @@
+# API Server Dockerfile - Simple version for testing
+# Build context should be project root: docker build -f apps/api/Dockerfile.simple .
+
+# 1. ベースイメージの選択
+FROM node:20-slim AS base
+
+# 2. pnpmのインストール
+RUN npm install -g pnpm
+
+# 3. ビルダーイメージの準備
+FROM base AS builder
+WORKDIR /app
+
+# 4. 依存関係の解決とインストール
+# ルートのpackage.jsonとpnpm-lock.yamlをコピー
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+
+# ワークスペース全体の依存関係を効率的にインストール
+RUN pnpm fetch
+RUN pnpm install -r --frozen-lockfile
+
+# 5. ソースコードのコピー
+COPY . .
+
+# 6. アプリケーションのビルド
+# Turborepoを使ってapiアプリと、それが依存するパッケージをビルド
+RUN pnpm turbo build --filter=@real-estate-dx/api
+
+# 7. 本番用イメージの作成
+FROM base AS runner
+WORKDIR /app
+
+# 8. 本番に必要なファイルのみコピー
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+
+# pnpm deployを使い、apiの実行に必要なファイルだけをコピー
+RUN pnpm deploy --filter @real-estate-dx/api ./deploy
+
+# 9. 最終的なWORKDIRの設定とコマンド
+WORKDIR /app/deploy
+EXPOSE 8000
+CMD [ "node", "dist/index.js" ]
