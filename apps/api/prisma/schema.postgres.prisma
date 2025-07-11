@@ -1,0 +1,255 @@
+// This is your Prisma schema file for PostgreSQL,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenant system base
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  domain    String?  @unique
+  settings  Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users      User[]
+  properties Property[]
+  ocrJobs    OcrJob[]
+
+  @@map("tenants")
+}
+
+// User management
+model User {
+  id         String   @id @default(uuid())
+  email      String
+  password   String
+  name       String
+  role       UserRole @default(USER)
+  department String?
+  phone      String?
+  avatar     String?
+  isActive   Boolean  @default(true)
+  tenantId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  properties        Property[]         @relation("PropertyAgent")
+  ocrJobs           OcrJob[]
+  propertyHistories PropertyHistory[]
+  sessions          Session[]
+  refreshTokens     RefreshToken[]
+
+  @@unique([email, tenantId])
+  @@index([email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  CLIENT
+  USER
+}
+
+// Session management
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+// Refresh token management
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Property management
+model Property {
+  id              String            @id @default(uuid())
+  title           String
+  description     String?           @db.Text
+  propertyType    PropertyType
+  transactionType TransactionType
+  status          PropertyStatus    @default(DRAFT)
+  price           Decimal           @db.Decimal(15, 2)
+  landArea        Decimal?          @db.Decimal(10, 2)
+  buildingArea    Decimal?          @db.Decimal(10, 2)
+  address         Json
+  location        Json?
+  features        String[]
+  metadata        Json?
+  agentId         String
+  tenantId        String
+  publishedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  tenant    Tenant            @relation(fields: [tenantId], references: [id])
+  agent     User              @relation("PropertyAgent", fields: [agentId], references: [id])
+  images    PropertyImage[]
+  documents PropertyDocument[]
+  ocrJobs   OcrJob[]
+  histories PropertyHistory[]
+
+  @@index([status])
+  @@index([propertyType])
+  @@index([transactionType])
+  @@index([agentId])
+  @@index([tenantId])
+  @@index([publishedAt])
+  @@map("properties")
+}
+
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  LAND
+  BUILDING
+  OTHER
+}
+
+enum TransactionType {
+  SALE
+  PURCHASE
+}
+
+enum PropertyStatus {
+  DRAFT
+  ACTIVE
+  CONTRACT
+  COMPLETED
+  CANCELLED
+}
+
+// Property images
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  caption    String?
+  order      Int      @default(0)
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@map("property_images")
+}
+
+// Property documents
+model PropertyDocument {
+  id         String       @id @default(uuid())
+  propertyId String
+  type       DocumentType
+  title      String
+  url        String
+  uploadedBy String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([type])
+  @@map("property_documents")
+}
+
+enum DocumentType {
+  CONTRACT
+  REGISTRATION
+  SURVEY
+  OTHER
+}
+
+// Property history tracking
+model PropertyHistory {
+  id         String   @id @default(uuid())
+  propertyId String
+  userId     String
+  action     String
+  changes    Json
+  createdAt  DateTime @default(now())
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([propertyId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("property_histories")
+}
+
+// OCR Jobs
+model OcrJob {
+  id          String    @id @default(uuid())
+  filename    String
+  fileUrl     String
+  status      OcrStatus @default(PENDING)
+  result      Json?
+  error       String?   @db.Text
+  userId      String
+  propertyId  String?
+  tenantId    String
+  processingStartedAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id])
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([createdAt])
+  @@map("ocr_jobs")
+}
+
+enum OcrStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}

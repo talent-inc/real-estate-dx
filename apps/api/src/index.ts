@@ -19,6 +19,8 @@ import uploadRoutes from './routes/upload.routes';
 import inquiryRoutes from './routes/inquiry.routes';
 import externalSystemRoutes from './routes/external-system.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import testDataRoutes from './routes/test-data.routes';
+import { TestDataService } from './services/test-data.service';
 
 // Load environment variables
 dotenv.config();
@@ -52,6 +54,11 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/external-systems', externalSystemRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
+// Test data routes (development only)
+if (process.env.USE_DEV_DATA === 'true') {
+  app.use('/api/test-data', testDataRoutes);
+}
+
 // Error handling
 app.use(errorHandler);
 
@@ -75,8 +82,18 @@ process.on('SIGINT', gracefulShutdown);
 // Start server
 const PORT = process.env.PORT || 4000;
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`🚀 API Server is running on port ${PORT}`);
   logger.info(`📍 Environment: ${process.env.NODE_ENV}`);
   logger.info(`🔗 CORS Origin: ${process.env.CORS_ORIGIN}`);
+  
+  // Initialize test data in development mode
+  if (process.env.USE_DEV_DATA === 'true') {
+    try {
+      await TestDataService.initialize();
+      logger.info('✅ Test data initialized successfully');
+    } catch (error) {
+      logger.error('❌ Failed to initialize test data:', error);
+    }
+  }
 });

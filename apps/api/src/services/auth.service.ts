@@ -3,6 +3,7 @@ import { generateTokens } from '../utils/jwt';
 import { AppError } from '../middlewares/error.middleware';
 import type { LoginRequest, RegisterRequest } from '../validators/auth.validators';
 import { prisma } from '../lib/prisma';
+import { TestDataService } from './test-data.service';
 
 // Mock user database for development/testing
 interface User {
@@ -42,8 +43,9 @@ export class AuthService {
   }> {
     const { email, password, tenantId } = loginData;
 
-    // Find user by email and tenantId
-    const user = users.find(u => u.email === email && u.tenantId === tenantId);
+    // Find user from test data
+    const testUsers = TestDataService.getUsers();
+    const user = testUsers.find((u: any) => u.email === email && u.tenantId === tenantId);
     
     if (!user) {
       throw new AppError(401, 'Invalid credentials', 'AUTHENTICATION_ERROR');
@@ -132,8 +134,9 @@ export class AuthService {
   }> {
     const { email, password, name, tenantId, role = 'USER' } = registerData;
 
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === email && u.tenantId === tenantId);
+    // Check if user already exists in test data
+    const testUsers = TestDataService.getUsers();
+    const existingUser = testUsers.find((u: any) => u.email === email && u.tenantId === tenantId);
     
     if (existingUser) {
       throw new AppError(409, 'User already exists', 'CONFLICT');
@@ -154,7 +157,8 @@ export class AuthService {
       updatedAt: new Date(),
     };
 
-    users.push(newUser);
+    // Add user to test data
+    TestDataService.addUser(newUser);
 
     // Generate tokens
     const tokens = generateTokens({
@@ -229,7 +233,8 @@ export class AuthService {
   }
 
   private async getCurrentUserInMemory(userId: string, tenantId: string): Promise<Omit<User, 'password'> | null> {
-    const user = users.find(u => u.id === userId && u.tenantId === tenantId);
+    const testUsers = TestDataService.getUsers();
+    const user = testUsers.find((u: any) => u.id === userId && u.tenantId === tenantId);
     
     if (!user) {
       return null;
@@ -264,8 +269,9 @@ export class AuthService {
   }
 
   private async getAllUsersInMemory(tenantId?: string): Promise<Omit<User, 'password'>[]> {
-    const filteredUsers = tenantId ? users.filter(u => u.tenantId === tenantId) : users;
-    return filteredUsers.map(({ password: _, ...user }) => user);
+    const testUsers = TestDataService.getUsers();
+    const filteredUsers = tenantId ? testUsers.filter((u: any) => u.tenantId === tenantId) : testUsers;
+    return filteredUsers.map(({ password: _, ...user }: any) => user);
   }
 
   private async getAllUsersWithPrisma(tenantId?: string): Promise<Omit<User, 'password'>[]> {
