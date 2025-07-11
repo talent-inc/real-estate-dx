@@ -1,7 +1,7 @@
 # Development Dockerfile for API - bypasses build errors
 # Build context should be project root: docker build -f apps/api/Dockerfile.dev .
 
-FROM node:20-slim AS development
+FROM node:24-slim AS development
 WORKDIR /app
 
 # Install pnpm
