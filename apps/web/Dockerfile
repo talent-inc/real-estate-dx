@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Development stage
-FROM node:20-alpine AS development
+FROM node:24-alpine AS development
 WORKDIR /app
 
 # Install system dependencies
@@ -32,7 +32,7 @@ EXPOSE 3000
 CMD ["pnpm", "run", "dev"]
 
 # Dependencies stage
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 
 # Install system dependencies
@@ -46,7 +46,7 @@ RUN corepack enable pnpm
 RUN pnpm install --frozen-lockfile
 
 # Builder stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -70,7 +70,7 @@ RUN corepack enable pnpm
 RUN pnpm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 
 # Install system dependencies
