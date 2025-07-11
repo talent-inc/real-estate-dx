@@ -2,7 +2,7 @@
 # For OCR and AI processing services
 
 # Development stage
-FROM python:3.11-slim AS development
+FROM python:3.13-slim AS development
 WORKDIR /app
 
 # Install system dependencies
@@ -27,7 +27,7 @@ EXPOSE 8001
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
 
 # Production stage
-FROM python:3.11-slim AS production
+FROM python:3.13-slim AS production
 WORKDIR /app
 
 # Install system dependencies
