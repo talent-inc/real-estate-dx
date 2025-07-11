@@ -21,7 +21,7 @@ opencv-python==4.8.1.78
 # Data processing
 numpy==1.24.4
 pandas==2.1.4
-requests==2.31.0
+requests==2.32.4
 
 # Async and queue processing
 aioredis==2.0.1
