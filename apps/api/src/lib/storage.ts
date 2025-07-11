@@ -3,18 +3,22 @@ import { AppError } from '../middlewares/error.middleware';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+// Environment-based storage selection
+const USE_CLOUD_STORAGE = process.env.USE_DEV_DATA !== 'true';
+
 // Initialize Google Cloud Storage
 const storage = new Storage({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
 });
 
-// Get bucket references
-const storageBucket = storage.bucket(process.env.GOOGLE_CLOUD_STORAGE_BUCKET || '');
-const documentsBucket = storage.bucket(process.env.GOOGLE_CLOUD_DOCUMENTS_BUCKET || '');
-
-// Environment-based storage selection
-const USE_CLOUD_STORAGE = process.env.USE_DEV_DATA !== 'true';
+// Get bucket references (only for cloud storage mode)
+const storageBucket = USE_CLOUD_STORAGE && process.env.GOOGLE_CLOUD_STORAGE_BUCKET 
+  ? storage.bucket(process.env.GOOGLE_CLOUD_STORAGE_BUCKET)
+  : null;
+const documentsBucket = USE_CLOUD_STORAGE && process.env.GOOGLE_CLOUD_DOCUMENTS_BUCKET
+  ? storage.bucket(process.env.GOOGLE_CLOUD_DOCUMENTS_BUCKET)
+  : null;
 
 export interface UploadedFile {
   id: string;
@@ -61,6 +65,10 @@ export class StorageService {
     try {
       const { bucket = 'storage', folder = '', isPublic = false } = options;
       const targetBucket = bucket === 'documents' ? documentsBucket : storageBucket;
+      
+      if (!targetBucket) {
+        throw new AppError(500, 'Storage bucket not configured', 'BUCKET_NOT_CONFIGURED');
+      }
       
       // Generate unique filename
       const fileId = uuidv4();
@@ -174,6 +182,10 @@ export class StorageService {
         ? storage.bucket(bucketName)
         : storageBucket;
 
+      if (!targetBucket) {
+        throw new AppError(500, 'Storage bucket not configured', 'BUCKET_NOT_CONFIGURED');
+      }
+
       // List files with the fileId prefix
       const [files] = await targetBucket.getFiles({
         prefix: fileId,
@@ -217,7 +229,7 @@ export class StorageService {
   private async getCloudFileMetadata(fileId: string): Promise<UploadedFile | null> {
     try {
       // Search in both buckets
-      const buckets = [storageBucket, documentsBucket];
+      const buckets = [storageBucket, documentsBucket].filter((b): b is any => b !== null);
       
       for (const bucket of buckets) {
         const [files] = await bucket.getFiles({
