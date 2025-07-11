@@ -1,21 +1,72 @@
 import { Router } from 'express';
-import { UploadController } from '../controllers/upload.controller';
-import { authenticate, requireRole } from '../middlewares/auth.middleware';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
+import { 
+  uploadSingle, 
+  uploadMultiple, 
+  handleUploadError 
+} from '../middlewares/upload.middleware';
+import { uploadController } from '../controllers/upload.controller';
 
 const router = Router();
-const uploadController = new UploadController();
 
-// Apply authentication to all upload routes
-router.use(authenticate);
+// Single file upload
+router.post(
+  '/single',
+  authenticate,
+  uploadSingle('file'),
+  uploadController.uploadSingle.bind(uploadController),
+  handleUploadError
+);
 
-// File upload routes
-router.post('/images', uploadController.uploadImage.bind(uploadController));
-router.post('/documents', uploadController.uploadDocument.bind(uploadController));
+// Multiple files upload
+router.post(
+  '/multiple',
+  authenticate,
+  uploadMultiple('files', 10), // Max 10 files
+  uploadController.uploadMultiple.bind(uploadController),
+  handleUploadError
+);
 
-// File management routes
-router.get('/', uploadController.getFiles.bind(uploadController));
-router.get('/stats', uploadController.getUploadStats.bind(uploadController));
-router.get('/:id', uploadController.getFile.bind(uploadController));
-router.delete('/:id', requireRole(['TENANT_ADMIN', 'MANAGER', 'AGENT']), uploadController.deleteFile.bind(uploadController));
+// Property images upload
+router.post(
+  '/properties/:propertyId/images',
+  authenticate,
+  authorize(['ADMIN', 'AGENT']),
+  uploadMultiple('images', 20), // Max 20 images
+  uploadController.uploadPropertyImages.bind(uploadController),
+  handleUploadError
+);
+
+// OCR document upload
+router.post(
+  '/ocr/document',
+  authenticate,
+  uploadSingle('document'),
+  uploadController.uploadOcrDocument.bind(uploadController),
+  handleUploadError
+);
+
+// Get file metadata
+router.get(
+  '/files/:fileId',
+  authenticate,
+  uploadController.getFileMetadata.bind(uploadController)
+);
+
+// Delete file
+router.delete(
+  '/files/:fileId',
+  authenticate,
+  authorize(['ADMIN', 'AGENT']),
+  uploadController.deleteFile.bind(uploadController)
+);
+
+// Development only: serve in-memory files
+if (process.env.USE_DEV_DATA === 'true') {
+  router.get(
+    '/dev/files/:fileId',
+    uploadController.serveInMemoryFile.bind(uploadController)
+  );
+}
 
 export default router;

@@ -10,7 +10,13 @@ import base64
 import time
 
 # 設定
-GOOGLE_API_KEY = "AIzaSyARAEr8OZJ20CjAx7u_q0y7VN25un9JpEc"
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', '')
+
+# APIキーが設定されていない場合の警告
+if not GOOGLE_API_KEY:
+    print("⚠️ 警告: GOOGLE_API_KEY環境変数が設定されていません")
+    print("環境変数を設定してください: export GOOGLE_API_KEY='your-api-key'")
+    sys.exit(1)
 
 def analyze_pdf_file(pdf_path):
     """

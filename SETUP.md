@@ -34,7 +34,7 @@ git --version
 ```bash
 # Google Cloud設定
 # プロジェクトID: real-estate-dx
-# APIキー: AIzaSyARAEr8OZJ20CjAx7u_q0y7VN25un9JpEc（すでに取得済み）
+# APIキー: 環境変数として設定（GOOGLE_API_KEY）
 
 # 確認コマンド
 echo "✅ Google Cloud APIキー準備済み"
@@ -75,7 +75,7 @@ DATABASE_URL="postgresql://postgres:password@localhost:5432/real_estate_dx"
 
 # Google Cloud設定
 GOOGLE_CLOUD_PROJECT="real-estate-dx"
-GOOGLE_CLOUD_API_KEY="AIzaSyARAEr8OZJ20CjAx7u_q0y7VN25un9JpEc"
+GOOGLE_CLOUD_API_KEY="your-google-api-key-here"
 
 # JWT認証
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"

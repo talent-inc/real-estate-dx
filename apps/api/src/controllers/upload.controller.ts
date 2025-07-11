@@ -1,185 +1,199 @@
-import type { Response, NextFunction } from 'express';
-import { UploadService } from '../services/upload.service';
+import { Request, Response, NextFunction } from 'express';
+import { storageService } from '../lib/storage';
 import { AppError } from '../middlewares/error.middleware';
-import type { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
-const uploadService = new UploadService();
+interface UploadRequest extends Request {
+  file?: Express.Multer.File;
+  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
+  user?: {
+    id: string;
+    tenantId: string;
+  };
+}
 
 export class UploadController {
-  async uploadImage(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  /**
+   * Upload a single file
+   */
+  async uploadSingle(req: UploadRequest, res: Response, next: NextFunction) {
     try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
+      if (!req.file) {
+        throw new AppError(400, 'No file uploaded', 'NO_FILE');
       }
 
-      // Mock file object (in real implementation, this would come from multer)
-      const mockFile = {
-        filename: `${Date.now()}_image.jpg`,
-        originalname: req.body.filename || 'uploaded_image.jpg',
-        mimetype: req.body.mimetype || 'image/jpeg',
-        size: req.body.size || 1024000, // 1MB default
-      };
-
-      // Validate file
-      const validation = uploadService.validateFile(mockFile, 'image');
-      if (!validation.isValid) {
-        throw new AppError(400, validation.error!, 'VALIDATION_ERROR');
-      }
-
-      // Upload file
-      const uploadedFile = await uploadService.uploadFile(
-        mockFile,
-        req.user.tenantId,
-        req.user.userId,
-        'image'
-      );
+      const { folder, isPublic } = req.body;
+      
+      const uploadedFile = await storageService.uploadFile(req.file, {
+        folder: folder || `tenants/${req.user?.tenantId}`,
+        isPublic: isPublic === 'true',
+      });
 
       res.status(201).json({
-        success: true,
-        data: {
-          file: uploadedFile,
-        },
+        message: 'File uploaded successfully',
+        file: uploadedFile,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  async uploadDocument(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  /**
+   * Upload multiple files
+   */
+  async uploadMultiple(req: UploadRequest, res: Response, next: NextFunction) {
     try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        throw new AppError(400, 'No files uploaded', 'NO_FILES');
       }
 
-      // Mock file object (in real implementation, this would come from multer)
-      const mockFile = {
-        filename: `${Date.now()}_document.pdf`,
-        originalname: req.body.filename || 'uploaded_document.pdf',
-        mimetype: req.body.mimetype || 'application/pdf',
-        size: req.body.size || 2048000, // 2MB default
-      };
-
-      // Validate file
-      const validation = uploadService.validateFile(mockFile, 'document');
-      if (!validation.isValid) {
-        throw new AppError(400, validation.error!, 'VALIDATION_ERROR');
-      }
-
-      // Upload file
-      const uploadedFile = await uploadService.uploadFile(
-        mockFile,
-        req.user.tenantId,
-        req.user.userId,
-        'document'
+      const { folder, isPublic } = req.body;
+      
+      const uploadPromises = files.map(file => 
+        storageService.uploadFile(file, {
+          folder: folder || `tenants/${req.user?.tenantId}`,
+          isPublic: isPublic === 'true',
+        })
       );
+
+      const uploadedFiles = await Promise.all(uploadPromises);
 
       res.status(201).json({
-        success: true,
-        data: {
-          file: uploadedFile,
-        },
+        message: `${uploadedFiles.length} files uploaded successfully`,
+        files: uploadedFiles,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  async getFiles(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  /**
+   * Upload property images
+   */
+  async uploadPropertyImages(req: UploadRequest, res: Response, next: NextFunction) {
     try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
+      const files = req.files as Express.Multer.File[];
+      const { propertyId } = req.params;
+      
+      if (!files || files.length === 0) {
+        throw new AppError(400, 'No images uploaded', 'NO_IMAGES');
       }
 
-      const { userId } = req.query;
+      // Validate image files
+      const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      const invalidFiles = files.filter(file => !imageTypes.includes(file.mimetype));
+      
+      if (invalidFiles.length > 0) {
+        throw new AppError(400, 'Only image files are allowed', 'INVALID_IMAGE_TYPE');
+      }
 
-      // Get files
-      const files = await uploadService.getUserFiles(
-        req.user.tenantId,
-        userId as string
+      const uploadPromises = files.map(file => 
+        storageService.uploadFile(file, {
+          folder: `properties/${propertyId}/images`,
+          isPublic: true,
+        })
       );
 
-      res.status(200).json({
-        success: true,
-        data: {
-          files,
-        },
+      const uploadedImages = await Promise.all(uploadPromises);
+
+      res.status(201).json({
+        message: `${uploadedImages.length} images uploaded successfully`,
+        images: uploadedImages,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  async getFile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  /**
+   * Upload OCR document
+   */
+  async uploadOcrDocument(req: UploadRequest, res: Response, next: NextFunction) {
     try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
+      if (!req.file) {
+        throw new AppError(400, 'No document uploaded', 'NO_DOCUMENT');
       }
 
-      const { id } = req.params;
-
-      if (!id) {
-        throw new AppError(400, 'File ID is required', 'VALIDATION_ERROR');
+      // Validate document type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        throw new AppError(400, 'Invalid document type. Only PDF and images are allowed', 'INVALID_DOCUMENT_TYPE');
       }
 
-      // Get file
-      const file = await uploadService.getFile(id, req.user.tenantId);
+      const uploadedFile = await storageService.uploadFile(req.file, {
+        bucket: 'documents',
+        folder: `ocr/${req.user?.tenantId}`,
+        isPublic: false,
+      });
 
+      res.status(201).json({
+        message: 'Document uploaded successfully',
+        document: uploadedFile,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get file metadata
+   */
+  async getFileMetadata(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { fileId } = req.params;
+      
+      const metadata = await storageService.getFileMetadata(fileId);
+      
+      if (!metadata) {
+        throw new AppError(404, 'File not found', 'FILE_NOT_FOUND');
+      }
+
+      res.json(metadata);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Delete a file
+   */
+  async deleteFile(req: UploadRequest, res: Response, next: NextFunction) {
+    try {
+      const { fileId } = req.params;
+      
+      await storageService.deleteFile(fileId);
+      
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Serve in-memory file (development only)
+   */
+  async serveInMemoryFile(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (process.env.USE_DEV_DATA !== 'true') {
+        throw new AppError(404, 'Not found', 'NOT_FOUND');
+      }
+
+      const { fileId } = req.params;
+      const file = storageService.getInMemoryFile(fileId);
+      
       if (!file) {
-        throw new AppError(404, 'File not found', 'NOT_FOUND');
+        throw new AppError(404, 'File not found', 'FILE_NOT_FOUND');
       }
 
-      res.status(200).json({
-        success: true,
-        data: {
-          file,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async deleteFile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
-      }
-
-      const { id } = req.params;
-
-      if (!id) {
-        throw new AppError(400, 'File ID is required', 'VALIDATION_ERROR');
-      }
-
-      // Delete file
-      await uploadService.deleteFile(id, req.user.tenantId);
-
-      res.status(200).json({
-        success: true,
-        message: 'File deleted successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getUploadStats(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      if (!req.user) {
-        throw new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR');
-      }
-
-      // Get upload statistics
-      const stats = await uploadService.getUploadStats(req.user.tenantId);
-
-      res.status(200).json({
-        success: true,
-        data: {
-          stats,
-        },
+      res.json({
+        message: 'In-memory file placeholder',
+        file,
       });
     } catch (error) {
       next(error);
     }
   }
 }
+
+export const uploadController = new UploadController();

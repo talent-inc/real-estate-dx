@@ -394,7 +394,12 @@ def main():
     print("=" * 60)
     
     # 各種APIキーの確認
-    google_api_key = "AIzaSyARAEr8OZJ20CjAx7u_q0y7VN25un9JpEc"  # 既存のキーを使用
+    google_api_key = os.getenv('GOOGLE_API_KEY', '')
+    
+    # APIキーが設定されていない場合の警告
+    if not google_api_key:
+        print("⚠️ 警告: GOOGLE_API_KEY環境変数が設定されていません")
+        print("環境変数を設定してください: export GOOGLE_API_KEY='your-api-key'")
     
     results = []
     
