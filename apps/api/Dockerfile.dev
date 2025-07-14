@@ -1,26 +1,34 @@
-# Development Dockerfile for API - bypasses build errors
-# Build context should be project root: docker build -f apps/api/Dockerfile.dev .
+# Development Dockerfile for API
+FROM node:20-slim
 
-FROM node:20-slim AS development
+# Install OpenSSL and other dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@8
 
-# Copy workspace files
+# Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/*/package.json ./packages/*/
 
-# Install all dependencies
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy all source code
+# Copy source code
 COPY . .
 
-# Set working directory to API
+# Generate Prisma client
 WORKDIR /app/apps/api
+RUN pnpm prisma generate
 
 # Expose port
-EXPOSE 8000
+EXPOSE 4000
 
-# Use development server (bypasses TypeScript compilation)
-CMD ["pnpm", "run", "dev"]
+# Development command
+CMD ["pnpm", "dev"]
