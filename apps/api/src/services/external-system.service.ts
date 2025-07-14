@@ -321,6 +321,10 @@ export class ExternalSystemService {
     if (syncLogIndex !== -1) {
       const syncLog = global.syncLogs[syncLogIndex];
       
+      if (!syncLog) {
+        return;
+      }
+      
       // Mock completion data
       const totalRecords = Math.floor(Math.random() * 100) + 10;
       const failedRecords = Math.floor(Math.random() * 5);

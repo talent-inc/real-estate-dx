@@ -1,0 +1,148 @@
+name: TypeScript Error Progress Tracker
+
+on:
+  schedule:
+    # 毎日朝9時に実行（JST）
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  track-progress:
+    name: Track TypeScript Error Progress
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Count TypeScript errors
+        id: count-errors
+        run: |
+          # Count API errors
+          API_ERRORS=$(pnpm --filter @real-estate-dx/api tsc --noEmit 2>&1 | grep -c "error TS" || true)
+          
+          # Count Web errors
+          WEB_ERRORS=$(pnpm --filter web tsc --noEmit 2>&1 | grep -c "error TS" || true)
+          
+          # Total errors
+          TOTAL_ERRORS=$((API_ERRORS + WEB_ERRORS))
+          
+          # Get current date
+          DATE=$(date +%Y-%m-%d)
+          
+          echo "api_errors=$API_ERRORS" >> $GITHUB_OUTPUT
+          echo "web_errors=$WEB_ERRORS" >> $GITHUB_OUTPUT
+          echo "total_errors=$TOTAL_ERRORS" >> $GITHUB_OUTPUT
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          
+          # Create summary
+          echo "## TypeScript Error Count - $DATE" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Error Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| API | $API_ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web | $WEB_ERRORS |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Total** | **$TOTAL_ERRORS** |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Update progress log
+        run: |
+          # Create or update progress file
+          PROGRESS_FILE="docs/typescript-error-progress.md"
+          
+          if [ ! -f "$PROGRESS_FILE" ]; then
+            echo "# TypeScript Error Progress" > $PROGRESS_FILE
+            echo "" >> $PROGRESS_FILE
+            echo "Daily tracking of TypeScript error reduction." >> $PROGRESS_FILE
+            echo "" >> $PROGRESS_FILE
+            echo "| Date | API Errors | Web Errors | Total | Change |" >> $PROGRESS_FILE
+            echo "|------|------------|------------|-------|--------|" >> $PROGRESS_FILE
+          fi
+          
+          # Get previous total (last line)
+          PREV_TOTAL=$(tail -n 1 $PROGRESS_FILE | awk -F'|' '{print $5}' | tr -d ' ' || echo "0")
+          if [ -z "$PREV_TOTAL" ] || [ "$PREV_TOTAL" = "Change" ]; then
+            PREV_TOTAL=0
+          fi
+          
+          # Calculate change
+          if [ $PREV_TOTAL -eq 0 ]; then
+            CHANGE="N/A"
+          else
+            CHANGE_NUM=$((PREV_TOTAL - ${{ steps.count-errors.outputs.total_errors }}))
+            if [ $CHANGE_NUM -gt 0 ]; then
+              CHANGE="✅ -$CHANGE_NUM"
+            elif [ $CHANGE_NUM -lt 0 ]; then
+              CHANGE="❌ +${CHANGE_NUM#-}"
+            else
+              CHANGE="➖ 0"
+            fi
+          fi
+          
+          # Add new entry
+          echo "| ${{ steps.count-errors.outputs.date }} | ${{ steps.count-errors.outputs.api_errors }} | ${{ steps.count-errors.outputs.web_errors }} | ${{ steps.count-errors.outputs.total_errors }} | $CHANGE |" >> $PROGRESS_FILE
+          
+          # Commit if changed
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add $PROGRESS_FILE
+          git diff --staged --quiet || git commit -m "chore: update TypeScript error progress [${{ steps.count-errors.outputs.date }}]"
+          git push
+
+      - name: Create issue if errors increase
+        if: steps.count-errors.outputs.total_errors > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = '${{ steps.count-errors.outputs.date }}';
+            const totalErrors = ${{ steps.count-errors.outputs.total_errors }};
+            const apiErrors = ${{ steps.count-errors.outputs.api_errors }};
+            const webErrors = ${{ steps.count-errors.outputs.web_errors }};
+            
+            // Check if we should create an issue (every Monday or if errors increased significantly)
+            const today = new Date();
+            const isMonday = today.getDay() === 1;
+            
+            if (isMonday && totalErrors > 0) {
+              const issueTitle = `Weekly TypeScript Error Report - ${date}`;
+              const issueBody = `## TypeScript Error Summary
+              
+              As of ${date}, we have:
+              - **API Errors**: ${apiErrors}
+              - **Web Errors**: ${webErrors}
+              - **Total Errors**: ${totalErrors}
+              
+              ### Next Steps
+              1. Review the error details in the [CI logs](https://github.com/${{ github.repository }}/actions/workflows/ci.yml)
+              2. Prioritize fixing errors that block builds
+              3. Update type definitions for third-party libraries
+              4. Add missing type annotations
+              
+              ### Progress Tracking
+              See [TypeScript Error Progress](https://github.com/${{ github.repository }}/blob/main/docs/typescript-error-progress.md) for historical data.
+              
+              cc: @AI-1-Frontend @AI-2-Backend`;
+              
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['typescript', 'technical-debt', 'weekly-report']
+              });
+            }

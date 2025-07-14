@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { storageService } from '../lib/storage';
 import { AppError } from '../middlewares/error.middleware';
+import type { JWTPayload } from '../utils/jwt';
 
 interface UploadRequest extends Request {
   file?: Express.Multer.File;
   files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
-  user?: {
-    id: string;
-    tenantId: string;
-  };
+  user?: JWTPayload;
 }
 
 export class UploadController {
@@ -143,6 +141,10 @@ export class UploadController {
     try {
       const { fileId } = req.params;
       
+      if (!fileId) {
+        throw new AppError(400, 'File ID is required', 'VALIDATION_ERROR');
+      }
+      
       const metadata = await storageService.getFileMetadata(fileId);
       
       if (!metadata) {
@@ -162,6 +164,10 @@ export class UploadController {
     try {
       const { fileId } = req.params;
       
+      if (!fileId) {
+        throw new AppError(400, 'File ID is required', 'VALIDATION_ERROR');
+      }
+      
       await storageService.deleteFile(fileId);
       
       res.status(204).send();
@@ -180,6 +186,11 @@ export class UploadController {
       }
 
       const { fileId } = req.params;
+      
+      if (!fileId) {
+        throw new AppError(400, 'File ID is required', 'VALIDATION_ERROR');
+      }
+      
       const file = storageService.getInMemoryFile(fileId);
       
       if (!file) {

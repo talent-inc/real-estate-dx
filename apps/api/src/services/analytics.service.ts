@@ -368,7 +368,7 @@ export class AnalyticsService {
     while (current <= dateTo) {
       const value = minValue + Math.random() * (maxValue - minValue);
       data.push({
-        date: current.toISOString().split('T')[0],
+        date: current.toISOString().split('T')[0]!,
         value: Math.round(value * 100) / 100,
       });
 
@@ -432,6 +432,10 @@ export class AnalyticsService {
     
     if (reportIndex !== -1) {
       const report = global.analyticsReports[reportIndex];
+      
+      if (!report) {
+        return;
+      }
       
       // Generate mock report data based on type
       const reportData = this.generateReportData(reportRequest.reportType);

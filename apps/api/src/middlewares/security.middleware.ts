@@ -219,7 +219,7 @@ const parseSize = (size: string): number => {
   }
   
   const [, number, unit] = match;
-  return parseFloat(number) * units[unit];
+  return parseFloat(number!) * units[unit as keyof typeof units];
 };
 
 // Tenant isolation enforcement

@@ -268,6 +268,10 @@ jobs:
       - name: Build application
         run: pnpm --filter ${{ matrix.app }} build
         continue-on-error: true # ビルドエラーがあるため一時的に許容
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: real-estate-dx
+          SENTRY_PROJECT: ${{ matrix.app == '@real-estate-dx/api' && 'api-server' || 'web-frontend' }}
 
   # Job 4: Docker ビルドチェック
   docker-build:

@@ -1,8 +1,8 @@
 import { Request } from 'express';
-import { User } from '@prisma/client';
+import type { JWTPayload } from '../utils/jwt';
 
 export interface AuthenticatedRequest extends Request {
-  user: User;
+  user?: JWTPayload;
 }
 
 export interface TenantRequest extends AuthenticatedRequest {
@@ -12,7 +12,7 @@ export interface TenantRequest extends AuthenticatedRequest {
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
+      user?: JWTPayload;
       tenantId?: string;
     }
   }

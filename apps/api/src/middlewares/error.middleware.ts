@@ -154,13 +154,15 @@ export class RateLimitError extends AppError {
 
 export class ExternalServiceError extends AppError {
   constructor(service: string, message: string, details?: unknown, correlationId?: string) {
-    super(502, message, 'EXTERNAL_SERVICE_ERROR', { service, ...details }, ErrorSeverity.HIGH, ErrorCategory.EXTERNAL_SERVICE, true, correlationId);
+    const errorDetails = typeof details === 'object' && details !== null ? { service, ...details } : { service, details };
+    super(502, message, 'EXTERNAL_SERVICE_ERROR', errorDetails, ErrorSeverity.HIGH, ErrorCategory.EXTERNAL_SERVICE, true, correlationId);
   }
 }
 
 export class DatabaseError extends AppError {
   constructor(operation: string, message: string, details?: unknown, correlationId?: string) {
-    super(500, message, 'DATABASE_ERROR', { operation, ...details }, ErrorSeverity.HIGH, ErrorCategory.DATABASE, false, correlationId);
+    const errorDetails = typeof details === 'object' && details !== null ? { operation, ...details } : { operation, details };
+    super(500, message, 'DATABASE_ERROR', errorDetails, ErrorSeverity.HIGH, ErrorCategory.DATABASE, false, correlationId);
   }
 }
 

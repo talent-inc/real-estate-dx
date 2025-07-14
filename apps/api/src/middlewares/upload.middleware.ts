@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 
 // File filter function
 const fileFilter = (
-  req: Request,
+  _req: Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
@@ -51,29 +51,32 @@ export const uploadFields = (fields: multer.Field[]) => upload.fields(fields);
 // Error handling middleware for multer
 export const handleUploadError = (
   err: any,
-  req: Request,
+  _req: Request,
   res: Response,
   next: NextFunction
-) => {
+): void => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'File too large',
         code: 'FILE_TOO_LARGE',
         maxSize: process.env.MAX_FILE_SIZE,
       });
+      return;
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Too many files',
         code: 'TOO_MANY_FILES',
       });
+      return;
     }
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Unexpected field',
         code: 'UNEXPECTED_FIELD',
       });
+      return;
     }
   }
   

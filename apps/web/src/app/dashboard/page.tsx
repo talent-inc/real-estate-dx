@@ -1,6 +1,10 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton'
 import { 
   Building, 
   FileText, 
@@ -13,6 +17,17 @@ import {
 } from 'lucide-react'
 
 export default function DashboardPage() {
+  const [isLoading, setIsLoading] = useState(true)
+
+  // データの取得をシミュレート
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 1500)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   // 仮のデータ
   const stats = [
     {
@@ -82,7 +97,10 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      {isLoading ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="space-y-6">
         {/* ページヘッダー */}
         <div className="flex items-center justify-between">
           <div>
@@ -211,6 +229,7 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
+      )}
     </DashboardLayout>
   )
 }
