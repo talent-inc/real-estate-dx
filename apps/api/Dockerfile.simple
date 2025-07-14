@@ -2,7 +2,7 @@
 # Build context should be project root: docker build -f apps/api/Dockerfile.simple .
 
 # 1. ベースイメージの選択
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 # 2. pnpmのインストール
 RUN npm install -g pnpm

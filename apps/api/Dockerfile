@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Development stage
-FROM node:20-alpine AS development
+FROM node:24-alpine AS development
 WORKDIR /app
 
 # Install system dependencies
@@ -31,7 +31,7 @@ EXPOSE 8000
 CMD ["pnpm", "run", "dev"]
 
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Install system dependencies
@@ -57,7 +57,7 @@ RUN pnpm exec prisma generate
 RUN pnpm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 
 # Install system dependencies
