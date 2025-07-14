@@ -38,35 +38,33 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   }
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <CardHeader className="p-0">
-        <div className="relative aspect-video">
-          <Image
-            src={property.images[0]?.url || '/placeholder-property.jpg'}
-            alt={property.name || property.title}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute top-2 left-2 flex gap-2">
-            <PropertyTypeBadge type={property.propertyType} />
-            <PropertyStatusBadge status={property.status} />
-          </div>
+    <Card className="h-full flex flex-col">
+      <div className="relative aspect-[16/9] w-full">
+        <Image
+          src={property.images[0]?.url || '/placeholder-property.jpg'}
+          alt={property.name || property.title}
+          fill
+          className="object-cover"
+        />
+        <div className="absolute top-[var(--space-sm)] left-[var(--space-sm)] flex gap-[var(--space-xs)]">
+          <PropertyTypeBadge type={property.propertyType} />
+          <PropertyStatusBadge status={property.status} />
         </div>
-      </CardHeader>
+      </div>
       
-      <CardContent className="p-4">
-        <div className="space-y-3">
+      <CardContent className="flex-1 p-[var(--space-lg)]">
+        <div className="space-y-[var(--space-sm)]">
           {/* 物件名・価格 */}
           <div>
-            <h3 className="font-semibold text-lg line-clamp-1">
+            <h3 className="font-[var(--semibold)] text-[var(--text-lg)] text-[var(--ink)] line-clamp-1">
               {property.name}
             </h3>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-2xl font-bold text-primary">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-[var(--space-xs)]">
+              <span className="text-[var(--text-xl)] font-[var(--semibold)] text-[var(--tint)]">
                 {formatPrice(property.price)}
               </span>
               {property.rent && (
-                <span className="text-sm text-gray-600">
+                <span className="text-[var(--text-sm)] text-[var(--ink-secondary)]">
                   家賃: {formatPrice(property.rent)}
                 </span>
               )}
@@ -74,23 +72,23 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
 
           {/* 所在地 */}
-          <div className="flex items-start gap-2 text-sm text-gray-600">
+          <div className="flex items-start gap-[var(--space-sm)] text-[var(--text-sm)] text-[var(--ink-secondary)]">
             <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span className="line-clamp-2">{property.address}</span>
           </div>
 
           {/* 間取り・面積 */}
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <Home className="w-4 h-4 text-gray-400" />
-              <span className="font-medium">{property.layout}</span>
+          <div className="flex items-center gap-[var(--space-md)] text-[var(--text-sm)]">
+            <div className="flex items-center gap-[var(--space-xs)]">
+              <Home className="w-4 h-4 text-[var(--ink-tertiary)]" />
+              <span className="font-[var(--medium)] text-[var(--ink)]">{property.layout}</span>
             </div>
-            <span className="text-gray-600">{property.area}㎡</span>
+            <span className="text-[var(--ink-secondary)]">{property.area}㎡</span>
           </div>
 
           {/* 最寄駅 */}
           {property.nearestStation && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-[var(--space-sm)] text-[var(--text-sm)] text-[var(--ink-secondary)]">
               <Train className="w-4 h-4" />
               <span>
                 {property.nearestStation}
@@ -100,9 +98,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           )}
 
           {/* 築年数・構造 */}
-          <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-[var(--space-md)] text-[var(--text-xs)] text-[var(--ink-tertiary)]">
             {property.buildingAge !== undefined && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-[var(--space-xs)]">
                 <Calendar className="w-3 h-3" />
                 <span>築{property.buildingAge}年</span>
               </div>
@@ -117,10 +115,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+      <CardFooter className="p-[var(--space-lg)] pt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[var(--space-sm)]">
+        <div className="flex flex-wrap items-center gap-[var(--space-sm)] text-[var(--text-xs)] text-[var(--ink-tertiary)]">
           {property.assignedTo && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-[var(--space-xs)]">
               <User className="w-3 h-3" />
               <span>{property.assignedTo}</span>
             </div>
@@ -128,10 +126,10 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <span>更新: {formatDate(property.updatedAt)}</span>
         </div>
         
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
+        <div className="flex gap-[var(--space-sm)]">
+          <Button variant="secondary" size="sm" asChild>
             <Link href={`/properties/${property.id}`}>
-              <Eye className="w-4 h-4 mr-1" />
+              <Eye className="w-4 h-4 mr-[var(--space-xs)]" />
               詳細
             </Link>
           </Button>

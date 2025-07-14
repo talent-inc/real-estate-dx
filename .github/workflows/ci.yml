@@ -15,6 +15,9 @@ jobs:
   code-quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,17 +32,141 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+      
+      - name: Setup reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run linter
-        run: pnpm run lint
-        continue-on-error: true # 一時的にエラーを許容
+      - name: Run linter with reviewdog (API)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          pnpm --filter @real-estate-dx/api eslint . --ext .ts,.tsx --format json > api-lint.json 2>&1
+          LINT_EXIT_CODE=$?
+          cat api-lint.json | reviewdog -f=eslint \
+            -name="ESLint (API)" \
+            -reporter="github-pr-review" \
+            -filter-mode=nofilter \
+            -fail-on-error=false \
+            -level="warning"
+          echo "API_LINT_ERRORS=$LINT_EXIT_CODE" >> $GITHUB_ENV
+        continue-on-error: true
 
-      - name: Check types
-        run: pnpm run typecheck
-        continue-on-error: true # TypeScriptエラーがあるため一時的に許容
+      - name: Run linter with reviewdog (Web)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          pnpm --filter web next lint --format json > web-lint.json 2>&1
+          LINT_EXIT_CODE=$?
+          cat web-lint.json | reviewdog -f=eslint \
+            -name="ESLint (Web)" \
+            -reporter="github-pr-review" \
+            -filter-mode=nofilter \
+            -fail-on-error=false \
+            -level="warning"
+          echo "WEB_LINT_ERRORS=$LINT_EXIT_CODE" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Check types with reviewdog (API)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          pnpm --filter @real-estate-dx/api tsc --noEmit 2>&1 | tee api-typecheck.log
+          TYPECHECK_EXIT_CODE=$?
+          cat api-typecheck.log | reviewdog -f=tsc \
+            -name="TypeScript (API)" \
+            -reporter="github-pr-review" \
+            -filter-mode=nofilter \
+            -fail-on-error=false \
+            -level="error"
+          echo "API_TYPECHECK_ERRORS=$TYPECHECK_EXIT_CODE" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Check types with reviewdog (Web)
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          pnpm --filter web tsc --noEmit 2>&1 | tee web-typecheck.log
+          TYPECHECK_EXIT_CODE=$?
+          cat web-typecheck.log | reviewdog -f=tsc \
+            -name="TypeScript (Web)" \
+            -reporter="github-pr-review" \
+            -filter-mode=nofilter \
+            -fail-on-error=false \
+            -level="error"
+          echo "WEB_TYPECHECK_ERRORS=$TYPECHECK_EXIT_CODE" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Upload error logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-quality-logs
+          path: |
+            api-lint.json
+            web-lint.json
+            api-typecheck.log
+            web-typecheck.log
+
+      - name: Create error summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let summary = '## 📊 Code Quality Summary\n\n';
+            
+            // Count errors from logs
+            let apiLintErrors = 0;
+            let webLintErrors = 0;
+            let apiTypeErrors = 0;
+            let webTypeErrors = 0;
+            
+            try {
+              const apiLint = JSON.parse(fs.readFileSync('api-lint.json', 'utf8'));
+              apiLintErrors = apiLint.reduce((sum, file) => sum + (file.errorCount || 0), 0);
+            } catch (e) {}
+            
+            try {
+              const webLint = JSON.parse(fs.readFileSync('web-lint.json', 'utf8'));
+              webLintErrors = webLint.reduce((sum, file) => sum + (file.errorCount || 0), 0);
+            } catch (e) {}
+            
+            try {
+              const apiTypeLog = fs.readFileSync('api-typecheck.log', 'utf8');
+              apiTypeErrors = (apiTypeLog.match(/error TS\d+:/g) || []).length;
+            } catch (e) {}
+            
+            try {
+              const webTypeLog = fs.readFileSync('web-typecheck.log', 'utf8');
+              webTypeErrors = (webTypeLog.match(/error TS\d+:/g) || []).length;
+            } catch (e) {}
+            
+            summary += '| Check | API | Web |\n';
+            summary += '|-------|-----|-----|\n';
+            summary += `| ESLint Errors | ${apiLintErrors} | ${webLintErrors} |\n`;
+            summary += `| TypeScript Errors | ${apiTypeErrors} | ${webTypeErrors} |\n`;
+            summary += '\n';
+            
+            const totalErrors = apiLintErrors + webLintErrors + apiTypeErrors + webTypeErrors;
+            if (totalErrors > 0) {
+              summary += `⚠️ **Total errors found: ${totalErrors}**\n\n`;
+              summary += 'Please check the inline comments on the Files tab for detailed error locations.\n';
+            } else {
+              summary += '✅ **All checks passed!**\n';
+            }
+            
+            // Save summary for later use
+            core.setOutput('summary', summary);
+            core.setOutput('total_errors', totalErrors);
 
   # Job 2: ユニットテスト
   test-unit:
@@ -201,10 +328,18 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      - name: Download error logs
+        uses: actions/download-artifact@v4
+        with:
+          name: code-quality-logs
+          path: ./logs
+        continue-on-error: true
+
       - name: Comment PR
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const jobStatuses = {
               'Code Quality': '${{ needs.code-quality.result }}',
               'Unit Tests': '${{ needs.test-unit.result }}',
@@ -223,12 +358,75 @@ jobs:
             }
             
             comment += '\n';
-            comment += '> **Note**: Some checks are set to `continue-on-error` due to ongoing development.\n';
-            comment += '> Please review the detailed logs for any failures.\n';
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            // Add error summary if available
+            try {
+              let apiLintErrors = 0, webLintErrors = 0, apiTypeErrors = 0, webTypeErrors = 0;
+              
+              try {
+                const apiLint = JSON.parse(fs.readFileSync('./logs/api-lint.json', 'utf8'));
+                apiLintErrors = apiLint.reduce((sum, file) => sum + (file.errorCount || 0), 0);
+              } catch (e) {}
+              
+              try {
+                const webLint = JSON.parse(fs.readFileSync('./logs/web-lint.json', 'utf8'));
+                webLintErrors = webLint.reduce((sum, file) => sum + (file.errorCount || 0), 0);
+              } catch (e) {}
+              
+              try {
+                const apiTypeLog = fs.readFileSync('./logs/api-typecheck.log', 'utf8');
+                apiTypeErrors = (apiTypeLog.match(/error TS\d+:/g) || []).length;
+              } catch (e) {}
+              
+              try {
+                const webTypeLog = fs.readFileSync('./logs/web-typecheck.log', 'utf8');
+                webTypeErrors = (webTypeLog.match(/error TS\d+:/g) || []).length;
+              } catch (e) {}
+              
+              const totalErrors = apiLintErrors + webLintErrors + apiTypeErrors + webTypeErrors;
+              
+              if (totalErrors > 0) {
+                comment += '### 📊 Error Summary\n\n';
+                comment += '| Check | API | Web |\n';
+                comment += '|-------|-----|-----|\n';
+                comment += `| ESLint Errors | ${apiLintErrors} | ${webLintErrors} |\n`;
+                comment += `| TypeScript Errors | ${apiTypeErrors} | ${webTypeErrors} |\n`;
+                comment += '\n';
+                comment += `⚠️ **Total errors found: ${totalErrors}**\n\n`;
+                comment += '💡 **Tip**: Check the "Files changed" tab for inline error annotations from reviewdog.\n\n';
+              }
+            } catch (e) {
+              console.log('Could not read error logs:', e);
+            }
+            
+            comment += '> **Note**: Some checks are set to `continue-on-error` due to ongoing development.\n';
+            comment += '> Error details are available as inline comments on changed files.\n';
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: comment
+              issue_number: context.issue.number,
             });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('🤖 CI Check Results')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }

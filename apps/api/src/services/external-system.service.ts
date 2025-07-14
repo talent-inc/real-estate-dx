@@ -127,6 +127,10 @@ export class ExternalSystemService {
     }
 
     const currentAuth = global.externalSystemAuths[authIndex];
+    
+    if (!currentAuth) {
+      throw new AppError(404, 'External system authentication not found', 'NOT_FOUND');
+    }
 
     // Update credentials if provided
     let encryptedCredentials = currentAuth.encryptedCredentials;

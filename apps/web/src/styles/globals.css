@@ -4,48 +4,139 @@
 
 @layer base {
   :root {
+    /* Apple-Inspired Design System Colors */
+    /* Primary */
+    --ink: #1d1d1f;
+    --ink-secondary: #6e6e73;
+    --ink-tertiary: #c7c7cc;
+    
+    /* Surfaces */
+    --surface: #ffffff;
+    --surface-elevated: #f5f5f7;
+    --surface-secondary: #fafafa;
+    
+    /* Interactive */
+    --tint: #007AFF;
+    --tint-hover: #0051D5;
+    
+    /* Semantic */
+    --positive: #34C759;
+    --critical: #FF3B30;
+    
+    /* Invisible */
+    --shadow: rgba(0,0,0,0.08);
+    --border: rgba(0,0,0,0.08);
+    
+    /* Legacy Tailwind/shadcn compatibility */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;
+    
+    /* Typography */
+    --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Hiragino Sans', sans-serif;
+    
+    /* Font Sizes */
+    --text-xs: 11px;
+    --text-sm: 13px;
+    --text-base: 15px;
+    --text-lg: 17px;
+    --text-xl: 22px;
+    --text-xxl: 28px;
+    
+    /* Font Weight */
+    --regular: 400;
+    --medium: 500;
+    --semibold: 600;
+    
+    /* Line Height */
+    --leading-tight: 1.2;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.6;
+    
+    /* Spacing */
+    --unit: 4px;
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+    --space-xxl: 64px;
+    
+    /* Motion */
+    --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.6, 1);
+    --duration-instant: 0.1s;
+    --duration-fast: 0.2s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Apple-Inspired Dark Mode */
+    /* Primary */
+    --ink: #f5f5f7;
+    --ink-secondary: #a1a1a6;
+    --ink-tertiary: #48484a;
+    
+    /* Surfaces */
+    --surface: #000000;
+    --surface-elevated: #1c1c1e;
+    --surface-secondary: #2c2c2e;
+    
+    /* Interactive */
+    --tint: #0A84FF;
+    --tint-hover: #0066CC;
+    
+    /* Semantic */
+    --positive: #30D158;
+    --critical: #FF453A;
+    
+    /* Invisible */
+    --shadow: rgba(0,0,0,0.3);
+    --border: rgba(255,255,255,0.1);
+    
+    /* Legacy Tailwind/shadcn compatibility */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 211 100% 50%;
   }
 }
 
@@ -55,5 +146,80 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--ink);
+    background-color: var(--surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Typography Utilities */
+  .text-primary {
+    color: var(--ink);
+  }
+  
+  .text-secondary {
+    color: var(--ink-secondary);
+  }
+  
+  .text-tertiary {
+    color: var(--ink-tertiary);
+  }
+  
+  /* Surface Utilities */
+  .bg-elevated {
+    background-color: var(--surface-elevated);
+  }
+  
+  .bg-secondary {
+    background-color: var(--surface-secondary);
+  }
+  
+  /* Button Base Styles */
+  .btn-primary {
+    background-color: var(--tint);
+    color: white;
+    transition: all var(--duration-normal) var(--ease-out);
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--tint-hover);
+    transform: scale(1.02);
+  }
+  
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+  
+  /* Animation Utilities */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  
+  @keyframes success {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  
+  .animate-pulse {
+    animation: pulse 1.5s var(--ease-in-out) infinite;
+  }
+  
+  .animate-success {
+    animation: success var(--duration-normal) var(--ease-out);
+  }
+  
+  .animate-shake {
+    animation: shake var(--duration-slow) var(--ease-out);
   }
 }

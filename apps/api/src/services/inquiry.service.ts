@@ -168,6 +168,10 @@ export class InquiryService {
     }
 
     const currentInquiry = global.inquiries[inquiryIndex];
+    
+    if (!currentInquiry) {
+      throw new AppError(404, 'Inquiry not found', 'NOT_FOUND');
+    }
 
     // Update inquiry
     const updatedInquiry: Inquiry = {
@@ -188,6 +192,10 @@ export class InquiryService {
     }
 
     const currentInquiry = global.inquiries[inquiryIndex];
+    
+    if (!currentInquiry) {
+      throw new AppError(404, 'Inquiry not found', 'NOT_FOUND');
+    }
 
     // Update inquiry with response
     const updatedInquiry: Inquiry = {
@@ -222,6 +230,10 @@ export class InquiryService {
     }
 
     const currentInquiry = global.inquiries[inquiryIndex];
+    
+    if (!currentInquiry) {
+      throw new AppError(404, 'Inquiry not found', 'NOT_FOUND');
+    }
 
     // Update inquiry assignment
     const updatedInquiry: Inquiry = {

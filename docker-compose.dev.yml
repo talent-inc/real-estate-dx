@@ -9,6 +9,8 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile.dev
+      args:
+        - NODE_VERSION=20
     container_name: real-estate-dx-api-dev
     ports:
       - "8000:8000"
@@ -20,9 +22,16 @@ services:
       - JWT_EXPIRES_IN=7d
       - UPLOAD_DIR=/app/uploads
       - PORT=8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
-      - ./apps/api:/app
-      - /app/node_modules
+      # Source code only - exclude node_modules
+      - ./apps/api/src:/app/apps/api/src:delegated
+      - ./apps/api/prisma:/app/apps/api/prisma:delegated
+      - ./packages/shared/src:/app/packages/shared/src:delegated
+      # Config files
+      - ./apps/api/tsconfig.json:/app/apps/api/tsconfig.json:cached
+      - ./apps/api/.env:/app/apps/api/.env:cached
+      # Data volumes
       - uploads_data:/app/uploads
     networks:
       - real-estate-dx-network
@@ -33,35 +42,49 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    command: ["pnpm", "--filter", "@real-estate-dx/api", "dev"]
 
   # Web Frontend
   web:
     build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-      target: development
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+      args:
+        - NODE_VERSION=20
     container_name: real-estate-dx-web-dev
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=dev-nextauth-secret
     volumes:
-      - ./apps/web:/app
-      - /app/node_modules
-      - /app/.next
+      # Source code only - exclude node_modules and .next
+      - ./apps/web/src:/app/apps/web/src:delegated
+      - ./apps/web/public:/app/apps/web/public:delegated
+      - ./packages/shared/src:/app/packages/shared/src:delegated
+      # Config files
+      - ./apps/web/next.config.js:/app/apps/web/next.config.js:cached
+      - ./apps/web/tsconfig.json:/app/apps/web/tsconfig.json:cached
+      - ./apps/web/.env.local:/app/apps/web/.env.local:cached
     networks:
       - real-estate-dx-network
     depends_on:
       - api
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: ["pnpm", "--filter", "web", "dev"]
 
   # AI Worker Service
   ai-worker:
@@ -91,20 +114,21 @@ services:
   # Database Migration Runner
   migration:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-      target: development
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+      args:
+        - NODE_VERSION=20
     container_name: real-estate-dx-migration-dev
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/real_estate_dx
     volumes:
-      - ./apps/api:/app
+      - ./apps/api/prisma:/app/apps/api/prisma
     networks:
       - real-estate-dx-network
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["pnpm", "exec", "prisma", "migrate", "dev"]
+    command: ["pnpm", "--filter", "@real-estate-dx/api", "prisma", "migrate", "dev"]
     profiles:
       - migration
 
@@ -114,7 +138,7 @@ volumes:
   ai_models_data:
     driver: local
 
-# Extend the existing network
+# Create network automatically (not external)
 networks:
   real-estate-dx-network:
-    external: true
+    driver: bridge

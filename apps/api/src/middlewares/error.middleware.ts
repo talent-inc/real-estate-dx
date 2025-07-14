@@ -164,13 +164,6 @@ export class DatabaseError extends AppError {
   }
 }
 
-// Error alerting thresholds
-const ALERT_THRESHOLDS = {
-  [ErrorSeverity.CRITICAL]: 1, // Alert immediately
-  [ErrorSeverity.HIGH]: 5,     // Alert after 5 occurrences in 5 minutes
-  [ErrorSeverity.MEDIUM]: 20,  // Alert after 20 occurrences in 15 minutes
-  [ErrorSeverity.LOW]: 100,    // Alert after 100 occurrences in 1 hour
-};
 
 // Enhanced error handler with improved logging and monitoring
 export const errorHandler = (

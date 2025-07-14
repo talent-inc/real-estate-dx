@@ -1,97 +1,96 @@
-# Web Frontend Dockerfile
-# Multi-stage build for optimized production image
+# syntax=docker/dockerfile:1
+ARG NODE_VERSION=20
 
-# Development stage
-FROM node:20-alpine AS development
+# Base stage with pnpm
+FROM node:${NODE_VERSION}-alpine AS base
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@8.15.9 --activate
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache libc6-compat
+# Dependencies stage - monorepo aware
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+# Use BuildKit cache mount for pnpm store
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm fetch --frozen-lockfile
+
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --filter web...
+
+# Development stage
+FROM base AS development
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy workspace files
+COPY pnpm-workspace.yaml ./
+COPY turbo.json ./
 
 # Copy package files
-COPY package*.json ./
-COPY ../../pnpm-lock.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
 
-# Install pnpm and dependencies
-RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
-
-# Copy Next.js config files
-COPY next.config.js ./
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
-COPY components.json ./
+# Copy application files
+COPY apps/web ./apps/web
+COPY packages/shared ./packages/shared
 
 # Expose port
 EXPOSE 3000
 
 # Development command
-CMD ["pnpm", "run", "dev"]
-
-# Dependencies stage
-FROM node:20-alpine AS deps
-WORKDIR /app
-
-# Install system dependencies
-RUN apk add --no-cache libc6-compat
-
-# Copy package files
-COPY package*.json ./
-
-# Install pnpm and dependencies
-RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
+ENV NEXT_TELEMETRY_DISABLED=1
+CMD ["pnpm", "--filter", "web", "dev"]
 
 # Builder stage
-FROM node:20-alpine AS builder
+FROM base AS builder
 WORKDIR /app
 
-# Copy dependencies from deps stage
+# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 
-# Copy source code
+# Copy all files
 COPY . .
 
-# Copy configuration files
-COPY next.config.js ./
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
-COPY components.json ./
+# Build shared package first, then web app
+RUN pnpm --filter @real-estate-dx/shared build
+RUN pnpm --filter web build
 
-# Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+# Production dependencies
+FROM base AS prod-deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
 
-# Build application
-RUN corepack enable pnpm
-RUN pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --prod --filter web...
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:${NODE_VERSION}-alpine AS production
 WORKDIR /app
 
-# Install system dependencies
-RUN apk add --no-cache \
-    dumb-init \
-    && addgroup -g 1001 -S nodejs \
-    && adduser -S nextjs -u 1001
+# Install runtime dependencies
+RUN apk add --no-cache dumb-init
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 
 # Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy package files and install production dependencies
-COPY package*.json ./
-RUN corepack enable pnpm
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy built application from builder stage
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Copy Next.js standalone output
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 # Switch to non-root user
 USER nextjs
@@ -103,5 +102,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "const http = require('http'); http.get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# Production command
+# Start server
+WORKDIR /app/apps/web
 CMD ["dumb-init", "node", "server.js"]

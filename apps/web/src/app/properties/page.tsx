@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/dashboard-layout'
 import PropertyCard from '@/components/properties/property-card'
+import { PropertyCardSkeleton } from '@/components/properties/property-card-skeleton'
 import PropertySearchFilters from '@/components/properties/property-search-filters'
 import { Button } from '@/components/ui/button'
 import { Property, PropertySearchParams } from '@/types/property'
@@ -148,23 +149,27 @@ export default function PropertiesPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* ページヘッダー */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-[var(--space-md)]">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">物件管理</h1>
-            <p className="text-gray-600">
+            <h1 className="text-[var(--text-xxl)] font-[var(--semibold)] text-[var(--ink)]">物件管理</h1>
+            <p className="text-[var(--text-sm)] text-[var(--ink-secondary)]">
               {filteredProperties.length}件の物件が見つかりました
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <Button variant="outline">
-              <Upload className="w-4 h-4 mr-2" />
-              CSVインポート
-            </Button>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              CSVエクスポート
-            </Button>
-            <Button onClick={() => router.push('/properties/new')}>
+          <div className="flex flex-col sm:flex-row gap-[var(--space-sm)]">
+            <div className="flex gap-[var(--space-sm)]">
+              <Button variant="secondary" className="flex-1 sm:flex-initial">
+                <Upload className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">CSVインポート</span>
+                <span className="sm:hidden">インポート</span>
+              </Button>
+              <Button variant="secondary" className="flex-1 sm:flex-initial">
+                <Download className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">CSVエクスポート</span>
+                <span className="sm:hidden">エクスポート</span>
+              </Button>
+            </div>
+            <Button onClick={() => router.push('/properties/new')} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               新規物件登録
             </Button>
@@ -175,32 +180,32 @@ export default function PropertiesPage() {
         <PropertySearchFilters onSearch={handleSearch} />
 
         {/* 表示切り替えとソート */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">表示形式:</span>
-            <div className="flex border rounded-md">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[var(--space-md)]">
+          <div className="flex items-center gap-[var(--space-sm)]">
+            <span className="text-[var(--text-sm)] text-[var(--ink-secondary)] hidden sm:inline">表示形式:</span>
+            <div className="flex border border-[var(--border)] rounded-[10px] overflow-hidden">
               <Button
-                variant={viewMode === 'card' ? 'default' : 'ghost'}
+                variant={viewMode === 'card' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('card')}
-                className="rounded-r-none"
+                className="rounded-none"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Button>
               <Button
-                variant={viewMode === 'table' ? 'default' : 'ghost'}
+                variant={viewMode === 'table' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('table')}
-                className="rounded-l-none"
+                className="rounded-none border-l border-[var(--border)]"
               >
                 <List className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">並び順:</span>
-            <select className="border border-gray-300 rounded-md px-3 py-1 text-sm">
+          <div className="flex items-center gap-[var(--space-sm)]">
+            <span className="text-[var(--text-sm)] text-[var(--ink-secondary)]">並び順:</span>
+            <select className="bg-[var(--surface-elevated)] border border-[var(--border)] rounded-[10px] px-[var(--space-md)] py-[var(--space-sm)] text-[var(--text-sm)] text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--tint)]/10 focus:border-[var(--tint)]">
               <option value="updatedAt-desc">更新日時（新しい順）</option>
               <option value="price-asc">価格（安い順）</option>
               <option value="price-desc">価格（高い順）</option>
@@ -212,24 +217,27 @@ export default function PropertiesPage() {
 
         {/* 物件一覧 */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600">検索中...</p>
-            </div>
+          <div className={
+            viewMode === 'card' 
+              ? "grid gap-[var(--space-lg)] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
+              : "space-y-[var(--space-md)]"
+          }>
+            {[...Array(6)].map((_, i) => (
+              <PropertyCardSkeleton key={i} />
+            ))}
           </div>
         ) : filteredProperties.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">条件に合致する物件が見つかりませんでした。</p>
-            <Button variant="outline" onClick={() => handleSearch({})}>
+          <div className="text-center py-[var(--space-xxl)]">
+            <p className="text-[var(--ink-secondary)] mb-[var(--space-md)]">条件に合致する物件が見つかりませんでした。</p>
+            <Button variant="secondary" onClick={() => handleSearch({})}>
               すべての物件を表示
             </Button>
           </div>
         ) : (
           <div className={
             viewMode === 'card' 
-              ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" 
-              : "space-y-4"
+              ? "grid gap-[var(--space-lg)] grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
+              : "space-y-[var(--space-md)]"
           }>
             {filteredProperties.map((property) => (
               <PropertyCard key={property.id} property={property} />
@@ -239,15 +247,15 @@ export default function PropertiesPage() {
 
         {/* ページネーション（将来実装予定） */}
         {filteredProperties.length > 0 && (
-          <div className="flex items-center justify-center pt-6">
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" disabled>
+          <div className="flex items-center justify-center pt-[var(--space-lg)]">
+            <div className="flex items-center gap-[var(--space-sm)]">
+              <Button variant="secondary" size="sm" disabled>
                 前のページ
               </Button>
-              <span className="px-3 py-1 bg-primary text-primary-foreground rounded text-sm">
+              <span className="px-[var(--space-md)] py-[var(--space-sm)] bg-[var(--tint)] text-white rounded-[10px] text-[var(--text-sm)] font-[var(--medium)]">
                 1
               </span>
-              <Button variant="outline" size="sm" disabled>
+              <Button variant="secondary" size="sm" disabled>
                 次のページ
               </Button>
             </div>

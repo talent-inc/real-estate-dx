@@ -135,6 +135,10 @@ export class UserService {
     }
 
     const currentUser = global.users[userIndex];
+    
+    if (!currentUser) {
+      throw new AppError(404, 'User not found', 'NOT_FOUND');
+    }
 
     // Check permissions
     if (updateData.role && !this.canUpdateUserRole(updaterRole, currentUser.role, updateData.role)) {
@@ -170,6 +174,10 @@ export class UserService {
     }
 
     const userToDelete = global.users[userIndex];
+    
+    if (!userToDelete) {
+      throw new AppError(404, 'User not found', 'NOT_FOUND');
+    }
 
     // Check permissions
     if (!this.canDeleteUser(deleterRole, userToDelete.role)) {
@@ -188,6 +196,10 @@ export class UserService {
     }
 
     const user = global.users[userIndex];
+    
+    if (!user) {
+      throw new AppError(404, 'User not found', 'NOT_FOUND');
+    }
 
     // Verify current password
     const isCurrentPasswordValid = await comparePassword(passwordData.currentPassword, user.password);

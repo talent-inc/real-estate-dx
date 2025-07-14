@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import type { User } from '../../services/user.service';
+import type { User } from '@prisma/client';
 
 export const generateTestJWT = (user: Partial<User>): string => {
   const payload = {
@@ -19,24 +19,22 @@ export const generateTestUser = (overrides: Partial<User> = {}): User => {
     id: 'test_user_id',
     tenantId: 'tenant_test',
     email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
+    name: 'Test User',
     role: 'USER',
+    department: null,
+    phone: null,
+    avatar: null,
+    password: 'hashed_password',
     isActive: true,
-    emailVerified: false,
     createdAt: new Date(),
     updatedAt: new Date(),
-    lastLoginAt: null,
-    profileImage: null,
-    phone: null,
-    settings: {},
     ...overrides,
   };
 };
 
 export const generateTestAdmin = (overrides: Partial<User> = {}): User => {
   return generateTestUser({
-    role: 'TENANT_ADMIN',
+    role: 'ADMIN',
     email: 'admin@example.com',
     ...overrides,
   });
@@ -44,7 +42,7 @@ export const generateTestAdmin = (overrides: Partial<User> = {}): User => {
 
 export const generateTestManager = (overrides: Partial<User> = {}): User => {
   return generateTestUser({
-    role: 'MANAGER',
+    role: 'AGENT',
     email: 'manager@example.com',
     ...overrides,
   });

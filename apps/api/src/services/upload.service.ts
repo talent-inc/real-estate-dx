@@ -1,6 +1,5 @@
 import { AppError } from '../middlewares/error.middleware';
 import path from 'path';
-import fs from 'fs/promises';
 
 // Mock file storage for now - will be replaced with Google Cloud Storage
 interface UploadedFile {

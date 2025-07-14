@@ -5,29 +5,26 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        primary: "bg-[var(--tint)] text-white rounded-[22px] hover:bg-[var(--tint-hover)] hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-[var(--tint)] shadow-sm",
+        secondary: "bg-transparent text-[var(--tint)] rounded-[22px] border-[1.5px] border-[var(--border)] hover:bg-[var(--surface-elevated)] focus-visible:ring-[var(--tint)]",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-[var(--critical)] text-white rounded-[22px] hover:bg-[var(--critical)]/90 hover:scale-[1.02] active:scale-[0.98] focus-visible:ring-[var(--critical)] shadow-sm",
+        ghost: "text-[var(--ink)] rounded-[10px] hover:bg-[var(--surface-elevated)] focus-visible:ring-[var(--tint)]",
+        link: "text-[var(--tint)] underline-offset-4 hover:underline focus-visible:ring-[var(--tint)]",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-[44px] px-[22px] text-[var(--text-base)] rounded-[22px]",
+        sm: "h-[36px] px-[16px] text-[var(--text-sm)] rounded-[18px]",
+        lg: "h-[52px] px-[32px] text-[var(--text-lg)] rounded-[26px]",
+        icon: "h-[44px] w-[44px] rounded-[22px]",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "primary",
       size: "default",
     },
   }

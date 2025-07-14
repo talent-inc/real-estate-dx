@@ -90,7 +90,12 @@ export class OCRService {
     }
     
     const url = queryParams.toString() ? `/ocr/history?${queryParams.toString()}` : '/ocr/history'
-    const response = await apiClient.get(url)
+    const response = await apiClient.get<{
+      jobs: OCRJobStatus[]
+      total: number
+      page: number
+      limit: number
+    }>(url)
     
     if (!response.success || !response.data) {
       throw new Error('OCR処理履歴の取得に失敗しました')
@@ -162,7 +167,12 @@ export class OCRService {
     maxPages: number
     confidenceThreshold: number
   }> {
-    const response = await apiClient.get('/ocr/settings')
+    const response = await apiClient.get<{
+      supportedFormats: string[]
+      maxFileSize: number
+      maxPages: number
+      confidenceThreshold: number
+    }>('/ocr/settings')
     
     if (!response.success || !response.data) {
       throw new Error('OCR設定の取得に失敗しました')
@@ -185,7 +195,14 @@ export class OCRService {
     monthlyUsage: number
     remainingQuota: number
   }> {
-    const response = await apiClient.get('/ocr/stats')
+    const response = await apiClient.get<{
+      totalProcessed: number
+      successfulProcessed: number
+      failedProcessed: number
+      averageProcessingTime: number
+      monthlyUsage: number
+      remainingQuota: number
+    }>('/ocr/stats')
     
     if (!response.success || !response.data) {
       throw new Error('OCR統計情報の取得に失敗しました')

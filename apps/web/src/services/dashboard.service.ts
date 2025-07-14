@@ -85,13 +85,24 @@ export class DashboardService {
     }
     
     const url = queryParams.toString() ? `/notifications?${queryParams.toString()}` : '/notifications'
-    const response = await apiClient.get(url)
+    const response = await apiClient.get<{
+      notifications: Array<{
+        id: string
+        title: string
+        message: string
+        type: 'info' | 'warning' | 'error' | 'success'
+        isRead: boolean
+        createdAt: string
+      }>
+      unreadCount: number
+      total: number
+    }>(url)
     
     if (!response.success) {
       throw new Error('通知一覧の取得に失敗しました')
     }
     
-    return response.data || {
+    return response.data ?? {
       notifications: [],
       unreadCount: 0,
       total: 0
@@ -161,7 +172,12 @@ export class DashboardService {
     storage: { current: number, limit: number, usage: number }
     ocrProcessing: { thisMonth: number, limit: number, usage: number }
   }> {
-    const response = await apiClient.get('/tenants/usage')
+    const response = await apiClient.get<{
+      users: { current: number, limit: number, usage: number }
+      properties: { current: number, limit: number, usage: number }
+      storage: { current: number, limit: number, usage: number }
+      ocrProcessing: { thisMonth: number, limit: number, usage: number }
+    }>('/tenants/usage')
     
     if (!response.success || !response.data) {
       throw new Error('使用量統計の取得に失敗しました')
@@ -188,7 +204,18 @@ export class DashboardService {
       listed: number
     }>
   }> {
-    const response = await apiClient.get(`/analytics/properties?period=${period}`)
+    const response = await apiClient.get<{
+      totalRevenue: number
+      averagePrice: number
+      soldProperties: number
+      averageDaysOnMarket: number
+      trends: Array<{
+        period: string
+        revenue: number
+        sold: number
+        listed: number
+      }>
+    }>(`/analytics/properties?period=${period}`)
     
     if (!response.success || !response.data) {
       throw new Error('物件分析データの取得に失敗しました')
@@ -219,7 +246,21 @@ export class DashboardService {
       commission: number
     }>
   }> {
-    const response = await apiClient.get(`/analytics/sales?period=${period}`)
+    const response = await apiClient.get<{
+      totalSales: number
+      commission: number
+      averageCommissionRate: number
+      topPerformers: Array<{
+        agentName: string
+        sales: number
+        commission: number
+      }>
+      monthlySales: Array<{
+        month: string
+        sales: number
+        commission: number
+      }>
+    }>(`/analytics/sales?period=${period}`)
     
     if (!response.success || !response.data) {
       throw new Error('売上分析データの取得に失敗しました')

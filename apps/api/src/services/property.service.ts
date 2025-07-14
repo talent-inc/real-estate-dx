@@ -202,6 +202,10 @@ export class PropertyService {
     }
 
     const currentProperty = global.properties[propertyIndex];
+    
+    if (!currentProperty) {
+      throw new AppError(404, 'Property not found', 'NOT_FOUND');
+    }
 
     // Update property
     const updatedProperty: Property = {
@@ -238,6 +242,10 @@ export class PropertyService {
     }
 
     const property = global.properties[propertyIndex];
+    
+    if (!property) {
+      throw new AppError(404, 'Property not found', 'NOT_FOUND');
+    }
 
     // If this is set as main image, remove main flag from others
     if (imageData.isMain) {
@@ -268,6 +276,11 @@ export class PropertyService {
     }
 
     const property = global.properties[propertyIndex];
+    
+    if (!property) {
+      throw new AppError(404, 'Property not found', 'NOT_FOUND');
+    }
+    
     const imageIndex = property.images.findIndex(img => img.id === imageId);
 
     if (imageIndex === -1) {

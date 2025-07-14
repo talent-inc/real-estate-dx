@@ -10,7 +10,7 @@ export const analyticsQuerySchema = z.object({
 export const propertyAnalyticsQuerySchema = z.object({
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
-  groupBy: z.enum(['day', 'week', 'month', 'quarter']).optional().default('month'),
+  groupBy: z.enum(['day', 'week', 'month', 'quarter', 'year']).optional().default('month'),
   propertyType: z.enum(['APARTMENT', 'HOUSE', 'LAND', 'OFFICE', 'SHOP', 'WAREHOUSE', 'OTHER']).optional(),
   region: z.string().optional(),
   priceRange: z.object({
@@ -22,7 +22,7 @@ export const propertyAnalyticsQuerySchema = z.object({
 export const inquiryAnalyticsQuerySchema = z.object({
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
-  groupBy: z.enum(['day', 'week', 'month']).optional().default('week'),
+  groupBy: z.enum(['day', 'week', 'month', 'quarter', 'year']).optional().default('week'),
   status: z.enum(['PENDING', 'IN_PROGRESS', 'RESPONDED', 'CLOSED']).optional(),
   source: z.enum(['WEBSITE', 'PHONE', 'EMAIL', 'REFERRAL', 'EXTERNAL_SYSTEM', 'OTHER']).optional(),
   agentId: z.string().optional(),
@@ -31,7 +31,7 @@ export const inquiryAnalyticsQuerySchema = z.object({
 export const userAnalyticsQuerySchema = z.object({
   dateFrom: z.string().datetime().optional(),
   dateTo: z.string().datetime().optional(),
-  groupBy: z.enum(['day', 'week', 'month']).optional().default('week'),
+  groupBy: z.enum(['day', 'week', 'month', 'quarter', 'year']).optional().default('week'),
   role: z.enum(['TENANT_ADMIN', 'MANAGER', 'AGENT', 'USER']).optional(),
   activityType: z.enum(['login', 'property_view', 'inquiry_create', 'inquiry_response']).optional(),
 });

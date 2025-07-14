@@ -135,7 +135,12 @@ export class PropertyService {
     failed: number
     errors: Array<{ row: number, message: string }>
   }> {
-    const response = await apiClient.upload('/properties/import', file, {
+    const response = await apiClient.upload<{
+      total: number
+      success: number
+      failed: number
+      errors: Array<{ row: number, message: string }>
+    }>('/properties/import', file, {
       type: 'csv'
     })
     

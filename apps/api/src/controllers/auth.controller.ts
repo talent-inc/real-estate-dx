@@ -79,7 +79,7 @@ export class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // In a real implementation, you would:
       // 1. Invalidate the refresh token in the database
@@ -96,7 +96,7 @@ export class AuthController {
     }
   }
 
-  async refreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async refreshToken(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // For now, return not implemented
       res.status(501).json({
@@ -112,7 +112,7 @@ export class AuthController {
   }
 
   // Development/testing endpoint
-  async getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getAllUsers(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       if (process.env.NODE_ENV === 'production') {
         throw new AppError(404, 'Endpoint not found', 'NOT_FOUND');

@@ -8,7 +8,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const authenticate = async (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -40,7 +40,7 @@ export const authenticate = async (
 export const requireRole = (allowedRoles: string | string[]) => {
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       next(new AppError(401, 'Authentication required', 'AUTHENTICATION_ERROR'));
       return;
@@ -57,7 +57,7 @@ export const requireRole = (allowedRoles: string | string[]) => {
 
 export const requireTenant = (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
   const tenantId = req.headers['x-tenant-id'] as string;

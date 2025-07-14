@@ -1,34 +1,55 @@
-# Development Dockerfile for API
-FROM node:20-slim
+# syntax=docker/dockerfile:1
+ARG NODE_VERSION=20
 
-# Install OpenSSL and other dependencies
-RUN apt-get update && apt-get install -y \
-    openssl \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
+# Base stage with pnpm
+FROM node:${NODE_VERSION}-alpine AS base
+RUN apk add --no-cache libc6-compat
+RUN corepack enable && corepack prepare pnpm@8.15.9 --activate
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm@8
+# Dependencies stage - monorepo aware
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Use BuildKit cache mount for pnpm store
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm fetch --frozen-lockfile
+
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Development stage
+FROM base AS development
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
+
+# Copy workspace files
+COPY pnpm-workspace.yaml ./
+COPY turbo.json ./
 
 # Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
-COPY packages/*/package.json ./packages/*/
+COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
+# Copy source files (these will be overridden by volume mounts in dev)
+COPY apps/api ./apps/api
+COPY packages/shared ./packages/shared
 
 # Generate Prisma client
 WORKDIR /app/apps/api
-RUN pnpm prisma generate
+RUN pnpm exec prisma generate
+
+# Set working directory back to app root
+WORKDIR /app
 
 # Expose port
-EXPOSE 4000
+EXPOSE 8000
 
 # Development command
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "--filter", "@real-estate-dx/api", "dev"]

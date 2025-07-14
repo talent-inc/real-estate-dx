@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { MobileMenu } from './mobile-menu'
 import { 
   Home, 
   Building, 
@@ -33,96 +34,80 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* ロゴ・タイトル */}
-          <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center space-x-2">
-              <Building className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold text-gray-900">
-                不動産DX
-              </span>
-            </Link>
-          </div>
-
-          {/* デスクトップナビゲーション */}
-          <nav className="hidden md:flex space-x-4">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+    <>
+      <header className="bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 z-30 backdrop-blur-xl bg-opacity-80">
+        <div className="max-w-[980px] mx-auto px-[var(--space-lg)]">
+          <div className="flex justify-between items-center h-16">
+            {/* ロゴ・タイトル */}
+            <div className="flex items-center">
+              {/* モバイルメニューボタン */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden mr-[var(--space-sm)]"
+                onClick={() => setIsMenuOpen(true)}
               >
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
+                <Menu className="h-5 w-5" />
+              </Button>
+              
+              <Link href="/dashboard" className="flex items-center gap-[var(--space-sm)]">
+                <Building className="h-8 w-8 text-[var(--tint)]" />
+                <span className="text-[var(--text-xl)] font-[var(--semibold)] text-[var(--ink)]">
+                  不動産DX
+                </span>
               </Link>
-            ))}
-          </nav>
-
-          {/* ユーザーメニュー */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
-              <User className="h-4 w-4" />
-              <span>山田 太郎</span>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleLogout}
-              className="flex items-center space-x-1"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>ログアウト</span>
-            </Button>
-          </div>
 
-          {/* モバイルメニューボタン */}
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* モバイルメニュー */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+            {/* デスクトップナビゲーション */}
+            <nav className="hidden lg:flex gap-[var(--space-sm)]">
               {navigationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-[var(--space-xs)] px-[var(--space-md)] py-[var(--space-sm)] rounded-[10px] text-[var(--text-base)] font-[var(--medium)] text-[var(--ink)] hover:bg-[var(--surface-elevated)] transition-all duration-[var(--duration-fast)]"
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </Link>
               ))}
-              <div className="border-t border-gray-200 pt-2">
-                <div className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700">
-                  <User className="h-4 w-4" />
-                  <span>山田 太郎</span>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleLogout}
-                  className="flex items-center space-x-1 mx-3 mt-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>ログアウト</span>
-                </Button>
+            </nav>
+
+            {/* ユーザーメニュー */}
+            <div className="hidden lg:flex items-center gap-[var(--space-md)]">
+              <div className="flex items-center gap-[var(--space-sm)] text-[var(--text-sm)] text-[var(--ink-secondary)]">
+                <User className="h-4 w-4" />
+                <span>山田 太郎</span>
               </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={handleLogout}
+                className="flex items-center gap-[var(--space-xs)]"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>ログアウト</span>
+              </Button>
+            </div>
+
+            {/* モバイル用ユーザーアイコン */}
+            <div className="lg:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+              >
+                <User className="h-5 w-5 text-[var(--ink)]" />
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-    </header>
+        </div>
+      </header>
+      
+      {/* モバイルメニュー */}
+      <MobileMenu 
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+      />
+    </>
   )
 }

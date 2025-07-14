@@ -343,6 +343,11 @@ export class AnalyticsService {
     }
 
     const widget = global.dashboardWidgets[widgetIndex];
+    
+    if (!widget) {
+      return null;
+    }
+    
     widget.data = await this.generateWidgetData(widget.type, widget.config);
     widget.lastUpdated = new Date();
 
