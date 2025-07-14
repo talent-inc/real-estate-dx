@@ -1,20 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { TestDataService } from '../services/test-data.service';
-import { authenticate, authorize } from '../middlewares/auth.middleware';
+import { authenticate, requireRole } from '../middlewares/auth.middleware';
 import { logger } from '../config/logger';
 
 const router = Router();
 
 // Middleware to check if test mode is enabled
-const checkTestMode = (req: Request, res: Response, next: any) => {
+const checkTestMode = (_req: Request, res: Response, next: any): void => {
   if (process.env.USE_DEV_DATA !== 'true') {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       error: {
         message: 'Test data endpoints are only available in development mode',
         code: 'TEST_MODE_DISABLED'
       }
     });
+    return;
   }
   next();
 };
@@ -24,8 +25,8 @@ router.get(
   '/all',
   checkTestMode,
   authenticate,
-  authorize(['ADMIN']),
-  (req: Request, res: Response) => {
+  requireRole(['ADMIN']),
+  (_req: Request, res: Response) => {
     try {
       const data = TestDataService.getData();
       res.json({
@@ -50,7 +51,7 @@ router.get(
   '/stats',
   checkTestMode,
   authenticate,
-  (req: Request, res: Response) => {
+  (_req: Request, res: Response) => {
     try {
       const stats = TestDataService.getStats();
       res.json({
@@ -75,7 +76,7 @@ router.post(
   '/reset',
   checkTestMode,
   authenticate,
-  authorize(['ADMIN']),
+  requireRole(['ADMIN']),
   async (req: Request, res: Response) => {
     try {
       await TestDataService.reset();
@@ -101,7 +102,7 @@ router.post(
   '/initialize',
   checkTestMode,
   authenticate,
-  authorize(['ADMIN']),
+  requireRole(['ADMIN']),
   async (req: Request, res: Response) => {
     try {
       await TestDataService.initialize();
@@ -127,8 +128,8 @@ router.delete(
   '/clear',
   checkTestMode,
   authenticate,
-  authorize(['ADMIN']),
-  (req: Request, res: Response) => {
+  requireRole(['ADMIN']),
+  (_req: Request, res: Response) => {
     try {
       TestDataService.clear();
       res.json({
@@ -153,7 +154,7 @@ router.get(
   '/:type',
   checkTestMode,
   authenticate,
-  (req: Request, res: Response) => {
+  (_req: Request, res: Response) => {
     try {
       const { type } = req.params;
       let data: any;

@@ -18,7 +18,7 @@ interface User {
 }
 
 // In-memory storage for development
-const users: User[] = [];
+// const users: User[] = [];
 let userIdCounter = 1;
 
 // Environment-based service selection
