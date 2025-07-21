@@ -25,7 +25,7 @@ requests==2.31.0
 
 # Async and queue processing
 aioredis==2.0.1
-celery==5.3.4
+celery==5.5.3
 
 # Validation and serialization
 pydantic==2.5.0
